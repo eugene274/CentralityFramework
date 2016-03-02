@@ -32,6 +32,8 @@ class CentralityManager : public TNamed
         
         void Det1IsInt (Bool_t is = true) { fSlicesFinder->Det1IsInt (is); }
 	void Det2IsInt (Bool_t is = true) { fSlicesFinder->Det2IsInt (is); }
+	void IsSimData (Bool_t is = true) { fSlicesFinder->IsSimData (is); }
+        void SetNormalization (Float_t norm) { fSlicesFinder->SetNormalization(norm); }
 
         void AddDetector (TString DetName);
         void SetDetectorsForCentralityAnalisys (TString Det1Name, TString Det2Name = "");

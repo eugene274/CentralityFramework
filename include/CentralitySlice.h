@@ -27,14 +27,15 @@ class CentralitySlice : public TNamed
         void AddXYPar (Float_t mean, Float_t sigma) { MeanXY.push_back(mean);  SigmaXY.push_back(sigma);  }
 
         void AddXY3 (Float_t x3) { MeanXY3.push_back(x3);  }
-        
+        void AddB (Float_t mean, Float_t sigma) { MeanB.push_back(mean);  SigmaB.push_back(sigma);  }
         
         void SetNSlices (Int_t NSlices) { fNSlices = NSlices;}   
         void SetCentralityMax (Float_t CentralityMax) { fCentralityMax = CentralityMax;}   
         void SetFitFunction (TF1 *FitFunction) { fFitFunction = FitFunction; }
         void SetSlicesStep (Float_t step) { fStep = step;}   
         void SetDirectionCentralEvents (Int_t d) {fDirectionCentralEvents = d;}
-	/**   Getters  **/
+
+        /**   Getters  **/
         Int_t GetRunId () { return fRunId; }
         Float_t GetAi (Int_t i) { return  fAvec.at(i); }
         Float_t GetBi (Int_t i) { return  fBvec.at(i); }
@@ -71,8 +72,9 @@ class CentralitySlice : public TNamed
         std::vector <Float_t> GetSigmaY () { return SigmaY; }
         std::vector <Float_t> GetSigmaXY () { return SigmaXY; }
         
+        std::vector <Float_t> GetMeanB () { return MeanB; }
+        std::vector <Float_t> GetSigmaB () { return SigmaB; }
         std::vector <Float_t> GetMeanXY3 () { return MeanXY3; }
-                
     private:
 
 	/**   Data members  **/
@@ -99,7 +101,10 @@ class CentralitySlice : public TNamed
         std::vector <Float_t> SigmaXY;
 
         std::vector <Float_t> MeanXY3;
-        
+
+        std::vector <Float_t> MeanB;
+        std::vector <Float_t> SigmaB;
+
         TF1 *fFitFunction;
         
         ClassDef(CentralitySlice, 2);

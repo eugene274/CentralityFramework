@@ -22,6 +22,7 @@ class CentralityEventContainer : public TNamed
 
 	/**   Setters  **/
         void SetRunId (Int_t RunId) { fRunId = RunId;}   
+        void SetB     (Float_t B)     { fB = B;}           
         void AddDetector (CentralityDetectorEvent Det) { fDetectorEvents.push_back(Det); }
         void AddDetectorEntry (Int_t i, Float_t Entry) { fDetectorEvents.at(i).AddEntry(Entry); }
         void AddDetectorEvent (Int_t i, std::vector <Float_t> weights) { fDetectorEvents.at(i).SetEntries (weights) ;   fDetectorEvents.at(i).SetDetId(i); }
@@ -30,13 +31,15 @@ class CentralityEventContainer : public TNamed
         Int_t GetRunId () { return fRunId; }
         Int_t GetNumberOfDetectors () { return fDetectorEvents.size(); }
         CentralityDetectorEvent GetDetectorData (Int_t i) { return  fDetectorEvents.at(i); }
-        
+        Float_t GetB () { return fB; }
         Float_t GetDetectorWeight (Int_t i) { return (fDetectorEvents.at(i)).GetTotalSignal (); }
         
     private:
 
 	/**   Data members  **/
         Int_t fRunId;
+        Float_t fB;
+
 //         std::vector <TString> fDetectorNames;        
         std::vector <CentralityDetectorEvent> fDetectorEvents;
         

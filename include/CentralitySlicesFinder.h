@@ -52,7 +52,7 @@ class CentralitySlicesFinder  : public TNamed
 	void SetCentralityMax (Float_t CentralityMax) { fCentralityMax = CentralityMax; }
 	void SetDirectionCentralEvents (Int_t Direction) { fDirectionCentralEvents = Direction; }
 	void SetSliceStep (Float_t SliceStep) { fSliceStep = SliceStep; }
-
+	void SetNormalization (Float_t Norm) { fNormalization = Norm; }
 	
 	void SetFileNames (TString FileName1, TString FileName2)
         {
@@ -73,6 +73,7 @@ class CentralitySlicesFinder  : public TNamed
 	void Det2IsInt (Bool_t is) { isDet2Int = is; }
         void SetNumberOfSlices (Int_t num) { nIntervals = num; }
         void SetDir (TString dir) {CFdir = dir;}
+        void IsSimData (Bool_t is = true) { fIsSimData = is; }
         /** Getters **/
         TString GetDet1Name () { return fDet1Name; }
         TString GetDet2Name () { return fDet2Name; }
@@ -104,6 +105,8 @@ class CentralitySlicesFinder  : public TNamed
         Bool_t isDet1Int, isDet2Int;
         Float_t fSliceStep;
         int nIntervals;
+        Bool_t fIsSimData;
+        Float_t fNormalization;
         TString CFdir;
         
         
@@ -120,7 +123,7 @@ class CentralitySlicesFinder  : public TNamed
 
         TTree *fNormTree, *fCentrTree;
         TFile *fSlicesFile;
-        Float_t det1, det2, det1max, det2max;
+        Float_t det1, det2, det1max, det2max, fB;
         TF1 *fFitFunction;
         
         CentralitySlicesFinder(const CentralitySlicesFinder&);

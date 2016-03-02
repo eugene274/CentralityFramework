@@ -12,7 +12,7 @@ int main()
 //     TString InFileName = "";
     TString dir = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/";    
     
-    TString ContainerFile = dir + "root_files/cbm_shield_1e4ev_au10au.root";
+    TString ContainerFile = dir + "root_files/cbm_data_new_format.root";
 
     
     CentralityManager *manager = new CentralityManager;
@@ -27,13 +27,14 @@ int main()
     manager->SetContainerFileName ( ContainerFile );   //output for NA61 data 
 
 //     manager->CopyNa61ExpDataToContainer(na61datadir);
-
+    manager->IsSimData(true);
     manager->SetDetectorsForCentralityAnalisys ("Mult", "PSD1");
     manager->SetCentralityMax(70);
     manager->SetDirectionCentralEvents(1);
 //     manager->Det1IsInt(true);
     manager->Do1DAnalisys(false);
     manager->SetSliceStep (5);
+    
     manager->RunSliceFinder();
 
     manager->WriteCentralityFile();

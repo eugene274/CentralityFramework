@@ -55,6 +55,8 @@ CentralitySlicesFinder::CentralitySlicesFinder()
     isDet2Int(false),
     fSliceStep (5.),
     nIntervals (20),
+    fIsSimData (false),
+    fNormalization (-1),
     fSlice (new CentralitySlice),
     fCentrTree (new TTree ("CentrTree", "Tree with slices parameters")),   
     fFitFunction (new TF1)
@@ -109,8 +111,9 @@ void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     
     fNormTree->Branch("det1", &det1, "det1/F");
     if (Det2Id != -1) fNormTree->Branch("det2", &det2, "det2/F");
+    if (fIsSimData) fNormTree->Branch("B", &fB, "fB/F");
     fNormTree->Branch("RunId", &fRunId, "RunId/I");
-
+    
     if (Det2Id != -1) GetNormalization (Det1Id, Det2Id);
         else          GetNormalization (Det1Id);
     
@@ -126,8 +129,10 @@ void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
                 
         det1 = (fContainer->GetDetectorWeight(Det1Id))/det1max;
         if (Det2Id != -1)  det2 = fContainer->GetDetectorWeight(Det2Id)/det2max;
-        
+        if (fIsSimData)  fB = fContainer->GetB();
         fRunId = fContainer->GetRunId();
+        
+        std::cout << "b = " << fContainer->GetB() << std::endl;
         
         if (isDet1Int)  { rand1 = random->Rndm() - 0.5;  det1 += rand1/det1max; }
         if (isDet2Int && Det2Id != -1)  { rand2 = random->Rndm() - 0.5;  det2 += rand2/det2max; }
@@ -479,13 +484,13 @@ void CentralitySlicesFinder::FindSlices ( )
     
     fNormTree->Draw(">>elist", Form("RunId == %d", fRunId) );
     TEventList* elist = (TEventList*)gDirectory->Get("elist");
-    int nTotalEvents = elist->GetN();
+    int nTotalEvents = fNormalization > 0 ? fNormalization : elist->GetN();
    
     std::cout << " fRunId = " << fRunId << endl;     
     
     std::cout << " nTotalEvents = " << nTotalEvents << endl; 
     
-    int nInside = 1.0/nIntervals * nTotalEvents;
+    int nInside = (fSliceStep/100) * nTotalEvents;
     int nIntervalsCut = nIntervals*fCentralityMax/100; //need in case cuts usage
     if (fCentralityMax == 100) nIntervalsCut--;
     
@@ -653,9 +658,12 @@ void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
 
             X.at(k) = det1;
             Y.at(k) = det2;
+            B.at(k) = fB; 
+
+        std::cout << "fill b = " << fB << std::endl;
+
             
             XY.at(k) = ( X.at(k)*tempk - Y.at(k) + tempb) / TMath::Sqrt( 1 + tempk*tempk);  
-            B.at(k) = 0; //normEvent.B;
 
             meanB     += B.at(k);
             meanParX  += X.at(k);
@@ -703,7 +711,7 @@ void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
         fSlice->AddYPar (meanParY, sigmaParY);
         fSlice->AddXYPar (meanParXY, sigmaParXY);
         fSlice->AddXY3 (meanParXY3);
-        
+        fSlice->AddB (meanB, sigmaB);
     }
 }
 
