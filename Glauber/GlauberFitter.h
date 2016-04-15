@@ -47,8 +47,8 @@ class GlauberFitter : public TNamed
         void SetBinSize  (Int_t size)   { fBinSize = size; }
         void SetOutDirName (TString name) { fOutDirName = name; }
         TH1F *GetGlauberFitHisto () { return hGlaub; }
-        TH1F *GetDataHisto ()       { return hData; }
-        TH1F *GetNBDHisto ()        { return hNBD; }
+        TH1F *GetDataHisto ()       { return hData;  }
+        TH1F *GetNBDHisto ()        { return hNBD;   }
         
     private:
 

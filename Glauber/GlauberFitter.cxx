@@ -14,7 +14,6 @@ ClassImp(GlauberFitter)
 // -----   Default constructor   -------------------------------------------
 GlauberFitter::GlauberFitter() 
   : TNamed()
-
 {
 
 }
@@ -154,7 +153,7 @@ void GlauberFitter::DrawHistos (Bool_t isSim, Bool_t isData, Bool_t isGlauber, B
   
     if (isData){
         c1->cd(2);
-        hData->GetYaxis()->SetRangeUser(0.1, 2e5);    
+//         hData->GetYaxis()->SetRangeUser(0.1, 2e4);    
         hData->Draw();
         
         if (isGlauber){
@@ -279,7 +278,7 @@ void GlauberFitter::FitGlauber (Int_t nf, Float_t f0, Float_t f1, Int_t nsigma, 
     TFile *file = new TFile(filename, "recreate");    
     TTree *tree = new TTree("test_tree", "tree" );
     
-    TH1F *h1 = new TH1F ("h1", "", 125, 0, 250);
+    TH1F *h1 = new TH1F ("h1", "", 100, 0, 400);
            
     Float_t f, mu, k, chi2, sigma;
 
@@ -313,6 +312,9 @@ void GlauberFitter::FitGlauber (Int_t nf, Float_t f0, Float_t f1, Int_t nsigma, 
             chi2 = temp_chi2;
             h1 = hGlaub;
             
+            h1->Draw();
+            gPad->Update();
+            
             tree->Fill();
             std::cout << "f = " << temp_f << "   mu1 = " << temp_mu << "    k = " << temp_k << "                chi2 = " << temp_chi2 << std::endl;    
             
@@ -323,6 +325,12 @@ void GlauberFitter::FitGlauber (Int_t nf, Float_t f0, Float_t f1, Int_t nsigma, 
                 k_fit = temp_k;
                 Chi2Min = chi2;
                 hBestFit = hGlaub;
+                hBestFit->Draw();
+                gPad->Update();
+                
+                std::cin >> f_fit;
+                std::cout << "!!!!!!!!!!!!!!!!!" << std::endl;
+                
             }            
             
             

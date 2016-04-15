@@ -19,4 +19,16 @@
 #pragma link C++ class AliGlauberNucleon+;
 #pragma link C++ class AliGlauberNucleus+;
 
+
+#pragma link C++ class DataTreeEvent+;
+#pragma link C++ class DataTreeMCTrack+;
+#pragma link C++ class DataTreePSDModule+;
+#pragma link C++ class DataTreePSDSection+;
+#pragma link C++ class DataTreeTrack+;
+#pragma link C++ class DataTreeTOFSegment+;
+#pragma link C++ class DataTreeV0Candidate+;    
+
+#pragma link C++ class TreeInterface+;    
+
+
 #endif

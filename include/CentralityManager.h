@@ -5,6 +5,7 @@
 #include <vector>
 #include "TString.h"
 #include "TNamed.h"
+#include "TCut.h"
 
 #include "CentralitySlicesFinder.h"
 #include "CentralityGetter.h"
@@ -34,6 +35,7 @@ class CentralityManager : public TNamed
 	void Det2IsInt (Bool_t is = true) { fSlicesFinder->Det2IsInt (is); }
 	void IsSimData (Bool_t is = true) { fSlicesFinder->IsSimData (is); }
         void SetNormalization (Float_t norm) { fSlicesFinder->SetNormalization(norm); }
+        void SetCuts (TCut cut)           { fSlicesFinder->SetCuts(cut); }
 
         void AddDetector (TString DetName);
         void SetDetectorsForCentralityAnalisys (TString Det1Name, TString Det2Name = "");

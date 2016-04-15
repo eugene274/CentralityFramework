@@ -11,9 +11,12 @@ int main()
 //     TString na61datadir = "/lustre/nyx/cbm/users/vblinov/NA61/QAtree/QA_15_12_09/";
 //     TString InFileName = "";
     TString dir = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/";    
-    
-    TString ContainerFile = dir + "root_files/cbm_data_new_format.root";
+//     TString ContainerFile = dir + "root_files/SC_ON_SL_OFF.root";
+//     TString ContainerFile = dir + "root_files/urqmd_sis100_electron_SC_OFF_SL_OFF.root";
+    TString ContainerFile = dir + "root_files/DCM-QGSM/sis100_STS_PSD_SC_OFF_SL_OFF_2016_04_11.root";
 
+    TCut cuts = "det1 > 0.65 - det2";
+    
     
     CentralityManager *manager = new CentralityManager;
     manager->SetDirectory(dir);
@@ -28,12 +31,13 @@ int main()
 
 //     manager->CopyNa61ExpDataToContainer(na61datadir);
     manager->IsSimData(true);
-    manager->SetDetectorsForCentralityAnalisys ("Mult", "PSD1");
-    manager->SetCentralityMax(70);
-    manager->SetDirectionCentralEvents(1);
-//     manager->Det1IsInt(true);
+    manager->Det1IsInt(true);
     manager->Do1DAnalisys(false);
+    manager->SetDetectorsForCentralityAnalisys ("Mult", "PSD1");
+    manager->SetCentralityMax(60);
+    manager->SetDirectionCentralEvents(1);
     manager->SetSliceStep (5);
+    manager->SetCuts (cuts);
     
     manager->RunSliceFinder();
 
@@ -49,13 +53,13 @@ int main()
 
     
     
-    float c = -1;
-    manager->LoadCentalityDataFile( dir + "root_files/Slices_Mult_PSD1_0.root");
-    c = manager->GetCentrality (250, 25);
-    std::cout << "Centrality = " << c << std::endl;
+//     float c = -1;
+//     manager->LoadCentalityDataFile( dir + "root_files/Slices_Mult_PSD1_0.root");
+//     c = manager->GetCentrality (250, 25);
+//     std::cout << "Centrality = " << c << std::endl;
+// // 
+//     delete manager;    
 // 
-    delete manager;    
-
     return 0;     
 }
 

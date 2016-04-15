@@ -17,6 +17,9 @@ include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
 add_definitions(${ROOT_CXX_FLAGS})
 
 include_directories(include)
+include_directories(InputTree)
+
+SET(CMAKE_CXX_FLAGS "-std=c++0x")
 
 set(INCLUDE
     include/CentralityDetectorEvent.h     
@@ -26,12 +29,21 @@ set(INCLUDE
     include/NA61DataEvent.h
     include/CentralityManager.h
     include/CentralitySlice.h
-
+    include/TreeInterface.h
+    
     Glauber/GlauberFitter.h 
     
     Glauber/AliGlauberMC.h
     Glauber/AliGlauberNucleon.h     
     Glauber/AliGlauberNucleus.h  
+
+    InputTree/DataTreeEvent.h
+    InputTree/DataTreeMCTrack.h
+    InputTree/DataTreePSDModule.h
+    InputTree/DataTreePSDSection.h
+    InputTree/DataTreeTrack.h
+    InputTree/DataTreeTOFSegment.h
+    InputTree/DataTreeV0Candidate.h    
     
     )
 
@@ -47,13 +59,23 @@ set(SOURCES
     src/NA61DataEvent.cxx
     src/CentralityManager.cxx
     src/CentralitySlice.cxx
+    src/TreeInterface.cxx
 
     Glauber/GlauberFitter.cxx 
 
     Glauber/AliGlauberMC.cxx
     Glauber/AliGlauberNucleon.cxx     
     Glauber/AliGlauberNucleus.cxx  
-
+    
+    
+    InputTree/DataTreeEvent.cxx
+    InputTree/DataTreeMCTrack.cxx
+    InputTree/DataTreePSDModule.cxx
+    InputTree/DataTreePSDSection.cxx
+    InputTree/DataTreeTrack.cxx
+    InputTree/DataTreeTOFSegment.cxx
+    InputTree/DataTreeV0Candidate.cxx 
+    
     )
 
 
