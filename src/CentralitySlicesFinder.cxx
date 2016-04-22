@@ -85,7 +85,7 @@ void CentralitySlicesFinder::WriteOutputData ()
 
     if ( fSlicesFile->IsOpen() ) {
         fSlicesFile->Close();
-        cout << "File is closed" << endl;
+        cout << "Output file is closed" << endl;
     }    
 }
 
@@ -150,7 +150,7 @@ void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
 
 void CentralitySlicesFinder::GetNormalization (Int_t Det1Id, Int_t Det2Id)
 {
-    
+    std::cout << "Normalization of centrality container..." << std::endl;
     det1max = 0;
     det2max = 0;
     
@@ -201,12 +201,17 @@ void CentralitySlicesFinder::GetNormalization (Int_t Det1Id, Int_t Det2Id)
             break;
         }
     }    
-    std::cout << "det1max = " << det1max << std::endl; 
-    std::cout << "det2max = " << det2max << std::endl; 
+    std::cout << "   det1max = " << det1max << std::endl; 
+    std::cout << "   det2max = " << det2max << std::endl; 
+    
+    std::cout << "Normalization done!" << std::endl;
+    
 }
 
 void CentralitySlicesFinder::GetNormalization (Int_t Det1Id)
 {
+    std::cout << "Normalization of centrality container..." << std::endl;
+    
     det1max = 0;
     
     Int_t nTotalEvents = fInTree->GetEntries();
@@ -240,12 +245,13 @@ void CentralitySlicesFinder::GetNormalization (Int_t Det1Id)
 //     c2->Print( CFdir + "QA/norm.pdf");
 //     c2->Print( CFdir + "QA/norm.root");
     
-    std::cout << "det1max = " << det1max << std::endl; 
-    
+    std::cout << "   det1max = " << det1max << std::endl; 
+    std::cout << "Normalization done!" << std::endl;
 }
 
 void CentralitySlicesFinder::RunSliceFinder (Int_t RunId)
 {
+    std::cout << "Starting SliceFinder" << std::endl;
     fCentrTree = new TTree ("CentrTree", "Tree with slices parameters");
     fCentrTree->Branch("CentralitySlice", "CentralitySlice", &fSlice);
 
@@ -254,14 +260,16 @@ void CentralitySlicesFinder::RunSliceFinder (Int_t RunId)
     TString filename = Form(CFdir + "root_files/Slices_%s_%s_%d.root", fDet1Name.Data(), fDet2Name.Data(), fRunId );
     
     fSlicesFile = new TFile (filename, "RECREATE");
-    std::cout << "Output file name is " << filename << std::endl;
+    std::cout << "   Output file name is " << filename << std::endl;
     
-    fCentrTree->Write(); 
+    fCentrTree->Write();
+    std::cout << "SliceFinder - done!" << std::endl;
+    
 }
 
 void CentralitySlicesFinder::Fit2DCorrelation ()
 {
-
+    std::cout << "Fitting 2D Correlation..." << std::endl;
 //     TH2F *h2D = new TH2F ("h2D", "det12", 100, 0., 1., 100, 0., 1.);
     TProfile *p2D;
 //     TString DrawPar = distrName + " >> h1(100, 0., 1., 100, 0., 1.)";
@@ -303,13 +311,13 @@ void CentralitySlicesFinder::Fit2DCorrelation ()
 //     leg1->Draw("same");
     
     gPad->Update();
-    
+    std::cout << "Fitting done!" << std::endl;
 }
 
 void CentralitySlicesFinder::FitCorrection ( int n_points )
 {
 //     TCanvas *c1 = new TCanvas("c1", "canvas", 1000, 600);
-
+    std::cout << "Starting fit correction..." << std::endl;
     std::vector <double> X4fit;
     std::vector <double> Y4fit;
     
@@ -425,12 +433,13 @@ void CentralitySlicesFinder::FitCorrection ( int n_points )
 //     c1->Print( CFdir + "QA/fit.pdf");    
 //     c1->Print( CFdir + "QA/fit.root");    
     
-    
+    std::cout << "Fit correction done!" << std::endl;
 }
 
 
 void CentralitySlicesFinder::FindCentralitySlices (Int_t RunId )
 {
+//     std::cout << "Start ..." << std::endl;
     gStyle->SetOptStat(0000);
     fSlice->ClearData ();
     
@@ -438,7 +447,7 @@ void CentralitySlicesFinder::FindCentralitySlices (Int_t RunId )
     
     fCuts = fBaseCuts && Form( "RunId == %d", RunId );
     fRunId = RunId;
-    std::cout << "!!!!!!!!! fRunId = " << fRunId << endl;     
+//     std::cout << "RunId = " << fRunId << endl;     
     
     TString distrName;
     if (!is1DAnalisys)  distrName = Form("%s_%s_run_%d_centrality_QA", fDet1Name.Data(), fDet2Name.Data(), fRunId );
@@ -474,6 +483,7 @@ void CentralitySlicesFinder::FindCentralitySlices (Int_t RunId )
     
     fCentrTree->Fill();  
     
+//     std::cout << "Slicing done!" << std::endl;
 //     QA ();
 //     fSlicesFile->Write();    
     
@@ -481,7 +491,7 @@ void CentralitySlicesFinder::FindCentralitySlices (Int_t RunId )
 
 void CentralitySlicesFinder::FindSlices ( )
 {
-    
+    std::cout << "Start slicing..." << std::endl;
     double finalPar[6] = {0, 0, 0, 0, 0, 0};
 
     if (!is1DAnalisys)
@@ -492,14 +502,14 @@ void CentralitySlicesFinder::FindSlices ( )
     TEventList* elist = (TEventList*)gDirectory->Get("elist");
     int nTotalEvents = fNormalization > 0 ? fNormalization : elist->GetN();
    
-    std::cout << " fRunId = " << fRunId << endl;     
-    std::cout << " nTotalEvents = " << nTotalEvents << endl; 
+    std::cout << "   RunId = " << fRunId << endl;     
+    std::cout << "   TotalEvents = " << nTotalEvents << endl; 
 
     fNormTree->Draw(">>elist1", fCuts );
     TEventList* elist1 = (TEventList*)gDirectory->Get("elist1");
     int nTotalEvents1 = elist1->GetN();
 
-    std::cout << "Events with cuts = " << nTotalEvents1 << "   fraction of total = " << nTotalEvents1*100.0/nTotalEvents << " %"  << endl; 
+    std::cout << "   Events with cuts = " << nTotalEvents1 << "   fraction of total = " << nTotalEvents1*100.0/nTotalEvents << " %"  << endl; 
 
     int nInside = (fSliceStep/100) * nTotalEvents;
     int nIntervalsCut = nIntervals*fCentralityMax/100; //need in case cuts usage
@@ -558,7 +568,7 @@ void CentralitySlicesFinder::FindSlices ( )
             step /= 2;
      
         }
-        std::cout << " % inside = " << 100.*nInsideCurrent/nTotalEvents << endl; 
+        std::cout << "   % of events in slice # " << i << " = " << 100.*nInsideCurrent/nTotalEvents << endl; 
         
         fSlice->AddSlice(kb[1], kb[0], x);
                  
@@ -585,13 +595,13 @@ void CentralitySlicesFinder::FindSlices ( )
             l2.DrawLineNDC(x1,0.15,x1,0.9);             
         } 
     }
-    
+    std::cout << "Slicing done!" << std::endl;
 }
 
 
 void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
 {
-    
+    std::cout << "Start calculating mean parameters in each slice for QA..." << std::endl;
     int nIntervalsCut = nIntervals*fCentralityMax/100; //need in case cuts usage
     int nIntervalsCut1 = nIntervalsCut;
     if (fCentralityMax != 100) nIntervalsCut++;
@@ -680,7 +690,7 @@ void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
             nn++;
             
         }
-        cout << "nInside = " << nInside << endl;
+        cout << "   Events inside slice = " << nInside << endl;
        
         if (nn > 0){
             meanB     /= nn;
@@ -715,6 +725,8 @@ void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
         fSlice->AddXY3 (meanParXY3);
         fSlice->AddB (meanB, sigmaB);
     }
+    std::cout << "Mean parameters calculated!" << std::endl;
+    
 }
 
 
@@ -744,7 +756,7 @@ void CentralitySlicesFinder::find_norm (double par[], double x, double kb[], int
 
 void CentralitySlicesFinder::QA ()
 {
-    
+    std::cout << "Start QA..." << std::endl;
     TCanvas *c1 = new TCanvas("c1", "canvas", 1500, 900);
     c1->Divide (2, 2);
 
@@ -813,6 +825,7 @@ void CentralitySlicesFinder::QA ()
     
     c1->Print( CFdir + "QA/testQA.pdf");    
     
+    std::cout << "QA saved!" << std::endl;
 //     TGraph g(a.size(), &(a[0]), &(b[0]));
     
     

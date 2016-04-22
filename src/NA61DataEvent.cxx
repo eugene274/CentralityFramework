@@ -54,10 +54,10 @@ void NA61DataEvent::Loop()
     TTree *OutTree = new TTree ( "na61_data", "na61_data" );
     OutTree->Branch("CentralityEventContainer", "CentralityEventContainer", &container);
     
-   
+    cout << "Reading events from chain..." << endl;
     for (Long64_t jentry=0; jentry<iCut;jentry++) {
         
-        if ((jentry+1) % 500 == 0) cout << "Event # " << jentry+1 << "... \r" << flush; 
+        if ((jentry+1) % 50 == 0) cout << "Event # " << jentry+1 << "... \r" << flush; 
         
         Long64_t ientry = LoadTree(jentry);
         if (ientry < 0) break;
@@ -98,9 +98,11 @@ void NA61DataEvent::Loop()
         OutTree->Fill();
 
     }
-
+    cout << "Writing centrility container..." << endl;
     OutTree->Write();
     OutFile->Close();
+
+    cout << "Done! Centrality container " << fOutFile <<  " created!" << endl;
 
     
     

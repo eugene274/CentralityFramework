@@ -26,7 +26,7 @@ class CentralityManager : public TNamed
         void SetContainerFileName (TString ContainerFileName) { fContainerFileName = ContainerFileName; }
         void CopyNa61ExpDataToContainer (TString dir);
         void LoadDataFromContainer (Int_t Det1Id, Int_t Det2Id = -1); 
-        void RunSliceFinder(Int_t RunId = 0) { fSlicesFinder->RunSliceFinder(RunId); }
+        void RunSliceFinder() { fSlicesFinder->RunSliceFinder(fRunId); }
         void SetRunId (Int_t RunId) { fRunId = RunId;}   
         void SetNumberOfSlices (Int_t num) { fSlicesFinder->SetNumberOfSlices(num); }
         void SetSliceStep (Float_t step) { fSlicesFinder->SetSliceStep(step); }

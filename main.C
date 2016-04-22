@@ -3,15 +3,11 @@
 #include "NA61DataEvent.h"
 #include "CentralityManager.h"
 
-int main(Int_t RunId = 23006)
+int main()
 {
-   
+    Int_t RunId = 23006;
     TString na61datadir = "/lustre/nyx/cbm/users/vblinov/NA61/QAtree/QA_15_12_09/";
-//     TString InFileName = "";
     TString dir = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/";    
-//     TString ContainerFile = dir + "root_files/SC_ON_SL_OFF.root";
-//     TString ContainerFile = dir + "root_files/urqmd_sis100_electron_SC_OFF_SL_OFF.root";
-//     TString ContainerFile = dir + "root_files/DCM-QGSM/sis100_STS_PSD_SC_OFF_SL_OFF_2016_04_11.root";
     TString ContainerFile = dir + "root_files/na61_test.root";
     
     TCut cuts = "";//"det1 > 0.65 - det2";
@@ -19,39 +15,38 @@ int main(Int_t RunId = 23006)
     CentralityManager *manager = new CentralityManager;
     manager->SetDirectory(dir);
     manager->SetRunId (RunId);
-    
-
-//     
+     
 //  For CentralityFinder 
 //  ************************************   
 
-//     manager->AddDetector("PSD1");
-//     manager->AddDetector("PSD2");
-//     manager->AddDetector("PSD3");
-//     manager->AddDetector("TPC");  
-//     manager->SetContainerFileName ( ContainerFile );  
-// //     manager->CopyNa61ExpDataToContainer(na61datadir);
-//     manager->IsSimData(false);
-//     manager->Det1IsInt(true);
-//     manager->Do1DAnalisys(false);
-//     manager->SetDetectorsForCentralityAnalisys ("TPC", "PSD1");
-//     manager->SetCentralityMax(60);
-//     manager->SetDirectionCentralEvents(1);
-//     manager->SetSliceStep (5);
-//     manager->SetCuts (cuts);
+    manager->AddDetector("PSD1");
+    manager->AddDetector("PSD2");
+    manager->AddDetector("PSD3");
+    manager->AddDetector("TPC");  
+    manager->SetContainerFileName ( ContainerFile );  
+    manager->CopyNa61ExpDataToContainer(na61datadir);
+
+    manager->IsSimData(false);
+    manager->Det1IsInt(true);
+    manager->Do1DAnalisys(false);
+    manager->SetDetectorsForCentralityAnalisys ("TPC", "PSD1");
+    manager->SetCentralityMax(60);
+    manager->SetDirectionCentralEvents(1);
+    manager->SetSliceStep (5);
+    manager->SetCuts (cuts);
+    
+    manager->RunSliceFinder();
+
+    manager->WriteCentralityFile();
 //     
-//     manager->RunSliceFinder(RunId);
-// 
-//     manager->WriteCentralityFile();
-    
-    
-//  For CentralityGetter
-//  ************************************   
-    
-    float c = -1;
-    manager->LoadCentalityDataFile( dir + "root_files/Slices_TPC_PSD1_23006.root");
-    c = manager->GetCentrality (250, 25);
-    std::cout << "Centrality = " << c << std::endl;
+//     
+// //  For CentralityGetter
+// //  ************************************   
+//     
+//     float c = -1;
+//     manager->LoadCentalityDataFile( dir + "root_files/Slices_TPC_PSD1_23006.root");
+//     c = manager->GetCentrality (250, 25);
+//     std::cout << "Centrality = " << c << std::endl;
         
     
     return 0;     
