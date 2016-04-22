@@ -30,8 +30,6 @@ void CentralityGetter::LoadCentalityDataFile (TString fileName)
     fCentrFile = new TFile(fileName.Data(), "READ");
     fCentrTree = (TTree*) fCentrFile->Get("CentrTree");    
     fCentrTree->SetBranchAddress("CentralitySlice", &fSlice);   
-    
-    
 }
 
 Float_t CentralityGetter::GetCentrality (Double_t det1)
@@ -77,8 +75,6 @@ Float_t CentralityGetter::GetCentrality (Double_t det1, Double_t det2)
 
     fCentrTree->GetEntry(0);
     Float_t step = fSlice->GetSlicesStep ();
-
-//     std::cout << "RunId = " <<  fSlice->GetRunId() << std::endl;
     
     det1 /= fSlice->GetDet1Max();
     det2 /= fSlice->GetDet2Max();    

@@ -103,7 +103,7 @@ void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     
     if ( fInFile->IsOpen() ) cout << "*** CentralitySlicesFinder::LoadInputData ***  File opened successfully" << endl;
         
-    fInTree = (TTree*) fInFile->Get("cbm_data");
+    fInTree = (TTree*) fInFile->Get("na61_data");    //TODO set Tree name as parameter
     
     fContainer = new CentralityEventContainer;
     fInTree->SetBranchAddress("CentralityEventContainer", &fContainer);   
@@ -276,14 +276,14 @@ void CentralitySlicesFinder::Fit2DCorrelation ()
 //     DrawPar = distrName + " >> prof (100, 0., 1., 100, 0., 1.)";
     
     fNormTree->Draw("det2 : det1 >> prof (100, 0., 1., 100, 0., 1.)", fCuts, "sameprof");
-    p2D = (TProfile*)gPad->GetPrimitive("prof");
     
-    p2D->SetLabelSize(10);
-    p2D->SetBarWidth(10);
-    p2D->SetLineColor(1);    
-    p2D->SetLineWidth(3);
-    p2D->Draw("same");
-    gPad->Update();
+    p2D = (TProfile*)gPad->GetPrimitive("prof");
+//     p2D->SetLabelSize(10);
+//     p2D->SetBarWidth(10);
+//     p2D->SetLineColor(1);    
+//     p2D->SetLineWidth(3);
+//     p2D->Draw("same");
+//     gPad->Update();
 
 //     c1->Print( CFdir + "QA/profile.pdf");    
 //     c1->Print( CFdir + "QA/profile.root");    
@@ -438,7 +438,7 @@ void CentralitySlicesFinder::FindCentralitySlices (Int_t RunId )
     
     fCuts = fBaseCuts && Form( "RunId == %d", RunId );
     fRunId = RunId;
-    std::cout << " fRunId = " << fRunId << endl;     
+    std::cout << "!!!!!!!!! fRunId = " << fRunId << endl;     
     
     TString distrName;
     if (!is1DAnalisys)  distrName = Form("%s_%s_run_%d_centrality_QA", fDet1Name.Data(), fDet2Name.Data(), fRunId );
