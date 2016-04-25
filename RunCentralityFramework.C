@@ -68,14 +68,39 @@ void RunCentralityFramework(Int_t RunId = 23005)
     manager->LoadCentalityDataFile( dir + "root_files/" + Form("Slices_%s_%s_%d.root", det4.Data(), det1.Data(), RunId) );
     c = manager->GetCentrality (100);
     
-    for (int i=0; i<152; i++)
-    {
-        c = manager->GetCentrality (0);
-        std::cout << "Centrality = " << c << std::endl;
+    
+    TString DataFileName = ContainerFile;
+    TFile *DataFile = new TFile ( ContainerFile, "read" );    
 
+    CentralityEventContainer *container = new CentralityEventContainer;
+    TTree *ContTree = (TTree*)DataFile->Get("na61_data");
+    ContTree->SetBranchAddress("CentralityEventContainer", &container);
+    
+    TH1F *hCentr = new TH1F ("hCentr", "", 101, -1, 100);
+
+    Float_t PSD1, PSD2, PSD3, M;
+    Float_t Centrality;
+    
+    Int_t n = ContTree->GetEntries();
+    std::cout << "n = " << n  << std::endl;
+
+    TCanvas *c1 = new TCanvas("c1", "canvas", 1500, 800);
+
+    
+    for (Int_t i=0; i<n; i++)
+    {
+        ContTree->GetEntry(i);
+        PSD1 = container->GetDetectorWeight(0);
+        PSD2 = container->GetDetectorWeight(1);
+        PSD3 = container->GetDetectorWeight(2);
+        M    = container->GetDetectorWeight(3);
+        
+        Centrality = manager->GetCentrality (M);
+        hCentr->Fill(Centrality);
+        
     }
     
-        
+    hCentr->Draw();
         
 }
 

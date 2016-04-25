@@ -40,12 +40,12 @@ Float_t CentralityGetter::GetCentrality (Double_t det1)
     float centrality = -1;
     fCentrTree->GetEntry(0);
     TRandom* random = new TRandom;  
-    
+    random->SetSeed();
     if (isDet1Int){ 
         Float_t rand1 = random->Rndm()/* - 0.5*/;  /*cout << rand1 << endl;*/  
-        cout << "det1 = " << det1 << endl;
+//         cout << "det1 = " << det1 << endl;
         det1 += rand1; 
-        cout << "  det1 = " << det1 << endl;
+//         cout << "  det1 = " << det1 << endl;
 
     }
     
@@ -55,7 +55,7 @@ Float_t CentralityGetter::GetCentrality (Double_t det1)
     Float_t step = fSlice->GetSlicesStep ();
     Int_t NSlices = fSlice->GetNSlices();
     
-    cout << "  det1 = " << det1 << endl;
+//     cout << "  det1 = " << det1 << endl;
 //     cout << "NSlices = " << NSlices << endl;
 //     cout << "step = " << step << endl;
     
@@ -100,7 +100,7 @@ Float_t CentralityGetter::GetCentrality (Double_t det1, Double_t det2)
     Float_t step = fSlice->GetSlicesStep ();
     Int_t NSlices = fSlice->GetNSlices();
     TRandom* random = new TRandom;  
-    
+    random->SetSeed();
     if (isDet1Int){ 
         Float_t rand1 = random->Rndm()/* - 0.5*/;  /*cout << rand1 << endl;*/  
         det1 += rand1; 

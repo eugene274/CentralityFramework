@@ -120,7 +120,7 @@ void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
         else          GetNormalization (Det1Id);
     
     TRandom* random = new TRandom;
-    
+    random->SetSeed();
     Float_t rand1 = 0, rand2 = 0;
 
     Int_t nTotalEvents = fInTree->GetEntries();
