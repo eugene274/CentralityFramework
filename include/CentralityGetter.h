@@ -26,12 +26,16 @@ class CentralityGetter
         Float_t GetCentrality (Double_t det1);        
         Float_t GetCentrality (Double_t det1, Double_t det2);
 
+        void Det1IsInt (Bool_t is) { isDet1Int = is; }
+	void Det2IsInt (Bool_t is) { isDet2Int = is; }
+        
         void SetNSlices (Int_t NSlices) { fNSlices = NSlices;}   
         Int_t GetNSlices () { return fNSlices; }
 
     private:
 
         int fNSlices;
+        Bool_t isDet1Int, isDet2Int;
 
         // borders of centrality slices y = kx + b
         

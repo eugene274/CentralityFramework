@@ -28,32 +28,32 @@ void RunCentralityFramework(Int_t RunId = 23005)
     manager->AddDetector("PSD3");
     manager->AddDetector("TPC");  
     manager->SetContainerFileName ( ContainerFile );  
-    manager->CopyNa61ExpDataToContainer(na61datadir);
+//     manager->CopyNa61ExpDataToContainer(na61datadir);
 
     manager->IsSimData(false);
     manager->Det1IsInt(true);
-    manager->Do1DAnalisys(false);
-    manager->SetDetectorsForCentralityAnalisys (det4, det1);
-    manager->SetCentralityMax(100);
-    manager->SetDirectionCentralEvents(0);
-    manager->SetSliceStep (5);
-    manager->SetCuts (cuts);
-    
-    manager->RunSliceFinder();
-    manager->WriteCentralityFile();
+//     manager->Do1DAnalisys(false);
+//     manager->SetDetectorsForCentralityAnalisys (det4);
+//     manager->SetCentralityMax(100);
+//     manager->SetDirectionCentralEvents(1);
+//     manager->SetSliceStep (5);
+//     manager->SetCuts (cuts);
+//     
+//     manager->RunSliceFinder();
+//     manager->WriteCentralityFile();
     
 //  
 //     
-    manager->Det1IsInt(false);
-    manager->Do1DAnalisys(false);
-    manager->SetDetectorsForCentralityAnalisys (det1, det2);
-    manager->SetCentralityMax(100);
-    manager->SetDirectionCentralEvents(1);
-    manager->SetSliceStep (5);
-    manager->SetCuts (cuts);
-    
-    manager->RunSliceFinder();
-    manager->WriteCentralityFile();
+//     manager->Det1IsInt(false);
+//     manager->Do1DAnalisys(false);
+//     manager->SetDetectorsForCentralityAnalisys (det1, det2);
+//     manager->SetCentralityMax(100);
+//     manager->SetDirectionCentralEvents(0);
+//     manager->SetSliceStep (5);
+//     manager->SetCuts (cuts);
+//     
+//     manager->RunSliceFinder();
+//     manager->WriteCentralityFile();
 
 
 
@@ -61,10 +61,20 @@ void RunCentralityFramework(Int_t RunId = 23005)
 //  For CentralityGetter
 //  ************************************   
     
+    det4 = "TPC";
+    det1 = "";
+    
     float c = -1;
     manager->LoadCentalityDataFile( dir + "root_files/" + Form("Slices_%s_%s_%d.root", det4.Data(), det1.Data(), RunId) );
-    c = manager->GetCentrality (100, 2000);
-    std::cout << "Centrality = " << c << std::endl;
+    c = manager->GetCentrality (100);
+    
+    for (int i=0; i<152; i++)
+    {
+        c = manager->GetCentrality (0);
+        std::cout << "Centrality = " << c << std::endl;
+
+    }
+    
         
         
 }

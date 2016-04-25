@@ -137,7 +137,7 @@ void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
 //         std::cout << "b = " << fContainer->GetB() << std::endl;
         
         if (isDet1Int)  { rand1 = random->Rndm()/* - 0.5*/;  /*cout << rand1 << endl;*/  det1 += rand1/det1max; }
-        if (isDet2Int && Det2Id != -1)  { rand2 = random->Rndm() - 0.5;  det2 += rand2/det2max; }
+        if (isDet2Int && Det2Id != -1)  { rand2 = random->Rndm()/* - 0.5*/;  det2 += rand2/det2max; }
         
         fNormTree->Fill();        
     }

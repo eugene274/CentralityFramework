@@ -31,8 +31,8 @@ class CentralityManager : public TNamed
         void SetNumberOfSlices (Int_t num) { fSlicesFinder->SetNumberOfSlices(num); }
         void SetSliceStep (Float_t step) { fSlicesFinder->SetSliceStep(step); }
         
-        void Det1IsInt (Bool_t is = true) { fSlicesFinder->Det1IsInt (is); }
-	void Det2IsInt (Bool_t is = true) { fSlicesFinder->Det2IsInt (is); }
+        void Det1IsInt (Bool_t is = true) { fSlicesFinder->Det1IsInt (is); fCentralityGetter->Det1IsInt (is); }
+	void Det2IsInt (Bool_t is = true) { fSlicesFinder->Det2IsInt (is); fCentralityGetter->Det2IsInt (is); }
 	void IsSimData (Bool_t is = true) { fSlicesFinder->IsSimData (is); }
         void SetNormalization (Float_t norm) { fSlicesFinder->SetNormalization(norm); }
         void SetCuts (TCut cut)           { fSlicesFinder->SetCuts(cut); }
