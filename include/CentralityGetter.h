@@ -32,10 +32,13 @@ class CentralityGetter
         void SetNSlices (Int_t NSlices) { fNSlices = NSlices;}   
         Int_t GetNSlices () { return fNSlices; }
 
+        void SetRunId (Int_t RunId);
+        
     private:
 
         int fNSlices;
         Bool_t isDet1Int, isDet2Int;
+        Int_t fRunId;
 
         // borders of centrality slices y = kx + b
         
@@ -43,7 +46,8 @@ class CentralityGetter
         
         TTree  *fCentrTree;
         TFile *fCentrFile;
-        
+        Float_t fDet1Norm, fDet2Norm;
+
         CentralityGetter(const CentralityGetter&);
         CentralityGetter& operator=(const CentralityGetter&);
 

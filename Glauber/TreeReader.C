@@ -1,23 +1,23 @@
-const int nPoints = 400;
+const int nPoints = 10000;
 
 
-void TreeReader(Int_t MultMin = 130, Int_t Mode = 1)
+void TreeReader(Int_t MultMin = 130, Int_t Mode = 2)
 {
-    TFile *f1 = new TFile("root_files/in_histo_1.root");    
-    h1d_Mult_TPC_Ref = (TH1F*)f1->Get("h1d_Mult_TPC_Ref");
+    TH1F *h1d_Mult_TPC_Ref/* = new TH1F("h1d_Mult_TPC_Ref","M_{TPC}^{ref}", 125, 0, 250)*/;
+    TFile *f111 = new TFile("/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/Macro/hTPC_ref.root");    
+    h1d_Mult_TPC_Ref = (TH1F*)f111->Get("h1Corr");
     h1d_Mult_TPC_Ref->GetYaxis()->SetRangeUser(0.1, 1e5);
 
     
-    TCanvas *c1 = new TCanvas("c1", "canvas", 800, 600);
+    TCanvas *c1 = new TCanvas("c1", "canvas", 1400, 1000);
     
     if (Mode ==2){
         c1->Divide(2,1);
         TPad *c1_1 = (TPad*) c1->GetListOfPrimitives()->FindObject("c1_1");
         c1_1->SetLogy(1);
     }
-    
-    
-    TString filename = Form ("root_files/TestMin_%i/FitInfo.root", MultMin);
+
+    TString filename = Form ( "MinMult_%d/merged_%d.root", MultMin, MultMin);
         
     TFile *file = new TFile(filename);    
 //     TTree *tree = file->Get("fit_tree");
@@ -36,7 +36,7 @@ void TreeReader(Int_t MultMin = 130, Int_t Mode = 1)
     Float_t chi2 ;
     Float_t sigma;
     
-    tree->SetBranchAddress("fy  ", &f);
+    tree->SetBranchAddress("f", &f);
     tree->SetBranchAddress("mu", &mu);  
     tree->SetBranchAddress("k", &k);
     tree->SetBranchAddress("chi2", &chi2);  
@@ -59,7 +59,7 @@ void TreeReader(Int_t MultMin = 130, Int_t Mode = 1)
         
 
         if (Mode == 2){
-            if (chi2 > 1.6)  continue;
+            if (chi2 > 1)  continue;
             c1->cd(1);
             h1d_Mult_TPC_Ref->Draw();    
             h1->Draw("same");
@@ -85,7 +85,7 @@ void TreeReader(Int_t MultMin = 130, Int_t Mode = 1)
         Int_t k_bin = int(k/0.02 + 0.01) ;
         Int_t sigma_bin = TMath::Nint(sigma*50) + 1 ;
 
-        if (chi2 < 0.7)
+//         if (chi2 < 2)
             std::cout << "f = " << f << "    mu = " << mu << "    k = " << k << "    sigma = " << sigma << "    chi2 = " << chi2 << std::endl;    
 //         std::cout << "f = " << f_bin << "    mu = " << mu << "    k = " << k_bin << "    sigma = " << sigma_bin << std::endl;    
 

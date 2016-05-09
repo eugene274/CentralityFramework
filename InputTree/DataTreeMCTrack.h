@@ -23,6 +23,7 @@ public:
     double GetEta(){return eta;}
     double GetPdgId(){return PdgId;}
     double GetMass(){return Mass;}
+    double GetCharge(){return Charge;}
     
     double GetTOFPositionComponent(int idx){return TOFPosition[idx];}
     double GetTOFPt(){return TOF_pT;}
@@ -45,6 +46,7 @@ public:
     void SetPhi(double fPhi){phi = fPhi;}
     void SetEta(double fEta){eta = fEta;}
     void SetPdgId(double fValue){PdgId = fValue;}
+    void SetCharge(double fValue){Charge = fValue;}
     void SetMass(double fValue){Mass = fValue;}
 
     void SetTOFPosition(double fX, double fY, double fZ){TOFPosition[0]=fX; TOFPosition[1]=fY; TOFPosition[2]=fZ;}
@@ -77,6 +79,7 @@ private:
     double eta;			//eta for track in the first hit point
     double PdgId;		//pdg code
     double Mass;		//mass
+    double Charge;		//charge
     
     double TOFPosition[3];	//Position at TOF
     double TOF_pT;		//pT at TOF

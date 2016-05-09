@@ -10,6 +10,8 @@
 #include "DataTreeTOFSegment.h"
 #include "DataTreeV0Candidate.h"
 #include "DataTreeMCTrack.h"
+#include "DataTreeTrigger.h"
+#include "DataTreeBPD.h"
 
 const int nV0Types = 3;
 
@@ -62,10 +64,11 @@ public:
     double GetRPAngle(){return RPAngle;}
     double GetImpactParameter(){return ImpactParameter;}
     double GetVertexPositionComponent(int idx){return VertexPosition[idx];}
-    int GetNFiredPSDModules(){ if(!ProcessFlag){Process();} return nFiredPSDModules;}
-    int GetNFiredPSDSections(){ if(!ProcessFlag){Process();} return nFiredPSDSections;}
-    double GetPSDEnergy(){ if(!ProcessFlag){Process();} return PSDEnergy;}
-    double GetMCPSDEnergy(){ if(!ProcessFlag){Process();} return MCPSDEnergy;}
+    double GetVertexQuality(){return VertexQuality;}
+    int GetNFiredPSDModules(){Process(); return nFiredPSDModules;}
+    int GetNFiredPSDSections(){Process(); return nFiredPSDSections;}
+    double GetPSDEnergy(){Process(); return PSDEnergy;}
+    double GetMCPSDEnergy(){Process(); return MCPSDEnergy;}
     double GetMCVertexPositionComponent(int idx){return MCVertexPosition[idx];}
     
     void SetRunId(int fValue){RunId = fValue;}
@@ -75,6 +78,7 @@ public:
     void SetImpactParameter(double fValue){ImpactParameter = fValue;}
     void SetVertexPosition(double fX, double fY, double fZ){VertexPosition[0]=fX; VertexPosition[1]=fY; VertexPosition[2]=fZ;}
     void SetVertexPositionComponent(int idx, double fValue){VertexPosition[idx] = fValue;}
+    void SetVertexQuality(double fValue){VertexQuality = fValue;}
     void SetMCVertexPosition(double fX, double fY, double fZ){MCVertexPosition[0]=fX; MCVertexPosition[1]=fY; MCVertexPosition[2]=fZ;}
     void SetMCVertexPositionComponent(int idx, double fValue){MCVertexPosition[idx] = fValue;}
         
@@ -109,6 +113,17 @@ public:
     DataTreeMCTrack* GetLastMCTrack(){return (DataTreeMCTrack*)arrMCTracks->At(nMCTracks-1);}
     void AddMCTrack(){TClonesArray &arr = *arrMCTracks; new(arr[nMCTracks]) DataTreeMCTrack(nMCTracks); nMCTracks++;}
     
+    int GetNTriggers(){return nTriggers;}
+    DataTreeTrigger* GetTrigger(int idx){return (DataTreeTrigger*)arrTriggers->At(idx);}
+    DataTreeTrigger* GetLastTrigger(){return (DataTreeTrigger*)arrTriggers->At(nTriggers-1);}
+    void AddTrigger(){TClonesArray &arr = *arrTriggers; new(arr[nTriggers]) DataTreeTrigger(nTriggers); nTriggers++;} 
+    void AddTrigger(TString label){TClonesArray &arr = *arrTriggers; new(arr[nTriggers]) DataTreeTrigger(nTriggers, label); nTriggers++;}     
+    
+    int GetNBPDs(){return nBPDs;}
+    DataTreeBPD* GetBPD(int idx){return (DataTreeBPD*)arrBPDs->At(idx);}
+    DataTreeBPD* GetLastBPD(){return (DataTreeBPD*)arrBPDs->At(nBPDs-1);}
+    void AddBPD(){TClonesArray &arr = *arrBPDs; new(arr[nBPDs]) DataTreeBPD(nBPDs); nBPDs++;}
+    
 private:
 
     bool ProcessFlag;
@@ -117,6 +132,7 @@ private:
     int EventId;
     double EventTimestamp;
     double VertexPosition[3];		//Position of the vertex
+    double VertexQuality;		//Quality of vertex fit
     
     double MCVertexPosition[3];		//Position of the vertex in MC
     double RPAngle;			//Reaction plane angle
@@ -146,8 +162,17 @@ private:
     int nMCTracks;			//Multiplicity of MC tracks
     TClonesArray* arrMCTracks;		//MC tracks
     
+    //BEGIN NEW
+
+    int nTriggers;			//Number of nTriggers
+    TClonesArray* arrTriggers;		//Triggers
+    
+    int nBPDs;				//Number of BPDs
+    TClonesArray* arrBPDs;		//BPDs
+    
+    //END NEW
   
-    ClassDefNV(DataTreeEvent, 1)
+    ClassDefNV(DataTreeEvent, 2)
 };
 
 #endif

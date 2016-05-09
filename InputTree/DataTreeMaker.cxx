@@ -20,6 +20,8 @@ using std::ifstream;
 // #include "QdetVectorGetter.h"
 
 #include "CbmL1PFFitter.h"
+#include "CbmKFVertex.h"
+#include "L1Field.h"
 
 #include "DataTreeEvent.h"
 #include "DataTreeTrack.h"
@@ -44,6 +46,7 @@ InitStatus DataTreeMaker::Init()
 {
     fCurEvent = 0;
     FairRootManager* ioman = FairRootManager::Instance();
+    fPrimVtx = (CbmVertex*) ioman->GetObject("PrimaryVertex");
     fHeader = (FairMCEventHeader*) ioman->GetObject("MCEventHeader.");
     //BEGIN temp for bad phi data
     fTreeEvents -> Add(sInputFileName);
@@ -65,7 +68,7 @@ void DataTreeMaker::DataTreeEvent_Init()
 {
     for (int i=0;i<nPSD_Modules;i++)
     {
-	DTEvent -> AddPSDModule(60);
+	DTEvent -> AddPSDModule(10);
     }
 }
 //--------------------------------------------------------------------------------------------------
@@ -121,8 +124,8 @@ void DataTreeMaker::Read_Event()
     }
     //BEGIN temp for bad phi data
     fTreeEvents->GetEntry(fCurEvent-1);
-    DTEvent -> SetRPAngle(uEvent->GetPhi());
-    cout << "RPAngle = " << DTEvent -> GetRPAngle() << endl;
+    DTEvent -> SetRPAngle(uEvent->GetPhi());//used only for DCM-QGSM
+//     cout << "RPAngle = " << DTEvent -> GetRPAngle() << endl;
     //END temp for bad phi data
 }
 //--------------------------------------------------------------------------------------------------
@@ -164,8 +167,8 @@ void DataTreeMaker::Read_STS()
     const FairTrackParam *trackParam;
     TVector3 momRec;
 
-    Int_t nSTStracks = flistSTSRECOtrack->GetEntriesFast();
-    cout << "nSTStracks = " << nSTStracks << endl;
+    Int_t nSTStracks = flistSTSRECOtrack->GetEntries();
+//     cout << "nSTStracks = " << nSTStracks << endl;
     //cout << "evenPlane::STSRECOtransverseMomMeth: # STS reco tracks = " << nSTStracks << endl; 
     
     // Extrapolation track parameters back to primary vertex
@@ -177,6 +180,13 @@ void DataTreeMaker::Read_STS()
     
     //BEGIN fitter
     CbmL1PFFitter fitter;
+    vector<float> vChiToPrimVtx;
+    CbmKFVertex kfVertex;
+    if(fPrimVtx)
+    kfVertex = CbmKFVertex(*fPrimVtx);
+  
+    vector<L1FieldRegion> vField;
+
     vector<int> Pdg;
     Pdg.resize(nSTStracks); 
     for (Int_t i=0; i<nSTStracks; i++)
@@ -184,6 +194,11 @@ void DataTreeMaker::Read_STS()
 	DTEvent->AddTrack();
 	vRTracks[i] = *( (CbmStsTrack*) flistSTSRECOtrack->At(i));
 	
+	if(!track)
+	{
+	    cout << "ERROR: empty track!";
+	    continue;
+	}
 	track = &vRTracks[i];
 	trackParam = track->GetParamFirst();	
 	trackParam->Momentum(momRec);
@@ -221,11 +236,18 @@ void DataTreeMaker::Read_STS()
     
 //     cout << "goto fitter" << endl;
     fitter.Fit(vRTracks, Pdg);
+//     fitter.Fit(vRTracks, pdg);
+    fitter.GetChiToVertex(vRTracks, vField, vChiToPrimVtx, kfVertex, 1.e9f);//tracks array, field, dca over error
     //END fitter
     
     for (Int_t i=0; i<nSTStracks; i++)
     {
 	track = &vRTracks[i];
+	if(!track)
+	{
+	    cout << "ERROR: empty track!";
+	    continue;
+	}
 	
 // 	match = (CbmTrackMatchNew*) flistSTStrackMATCH->At(i);
 // 	trackID = match->GetMCTrackId();

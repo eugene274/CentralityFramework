@@ -32,8 +32,8 @@ class CentralitySlicesFinder  : public TNamed
         void GetNormalization (Int_t Det1Id);
 
 
-        void RunSliceFinder(Int_t RunId);
-        void FindCentralitySlices (Int_t RunId = 0);        
+        void RunSliceFinder();
+        void FindCentralitySlices ();        
         void Fit2DCorrelation ();
         void FitCorrection ( int n_points );
         void FindSlices ();
@@ -54,19 +54,10 @@ class CentralitySlicesFinder  : public TNamed
 	void SetSliceStep (Float_t SliceStep) { fSliceStep = SliceStep; }
 	void SetNormalization (Float_t Norm) { fNormalization = Norm; }
 	
-	void SetFileNames (TString FileName1, TString FileName2)
-        {
-            fFileName1 = FileName1;
-            fFileName2 = FileName2;
-        }
+
         
 	void SetInFileName (TString FileName)  {  fInFileName = FileName;   }        
-        
-	void SetFileNames (TString FileName1)
-        {
-            fFileName1 = FileName1;
-            is1DAnalisys = true;
-        }        
+              
 	
 	void Do1DAnalisys (bool is) { is1DAnalisys = is; }
 	void Det1IsInt (Bool_t is) { isDet1Int = is; }
@@ -99,8 +90,7 @@ class CentralitySlicesFinder  : public TNamed
         Float_t fCentralityMax;
         Float_t fPrecision;       
         Int_t fDirectionCentralEvents;
-        Int_t fRunId;
-        TString fInFileName, fFileName1, fFileName2;
+        TString fInFileName;
         Bool_t is1DAnalisys;
         Bool_t isDet1Int, isDet2Int;
         Float_t fSliceStep;
@@ -109,9 +99,10 @@ class CentralitySlicesFinder  : public TNamed
         Float_t fNormalization;
         TString CFdir;
         
-        
-        std::vector <Int_t> fRunIdVector;
-        
+        std::vector <Float_t> fDet1NormVec;
+        std::vector <Float_t> fDet2NormVec;
+        std::vector <Int_t>   fRunIdVec;
+        std::vector <Int_t>   nEventsInRunVec;
         TFile *fInFile;
         TTree *fInTree;
         

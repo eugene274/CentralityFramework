@@ -27,10 +27,11 @@ set(INCLUDE
     include/CentralitySlicesFinder.h
     include/CentralityGetter.h
     include/NA61DataEvent.h
+    include/NA61DataEventNew.h
     include/CentralityManager.h
     include/CentralitySlice.h
     include/TreeInterface.h
-    
+    include/CentralityContainerNormalizer.h
     Glauber/GlauberFitter.h 
     
     Glauber/AliGlauberMC.h
@@ -44,7 +45,8 @@ set(INCLUDE
     InputTree/DataTreeTrack.h
     InputTree/DataTreeTOFSegment.h
     InputTree/DataTreeV0Candidate.h    
-    
+    InputTree/DataTreeTrigger.h
+    InputTree/DataTreeBPD.h
     )
 
 ROOT_GENERATE_DICTIONARY(G__Centrality ${INCLUDE} LINKDEF EventLinkDef.h)
@@ -57,10 +59,12 @@ set(SOURCES
     src/CentralitySlicesFinder.cxx
     src/CentralityGetter.cxx
     src/NA61DataEvent.cxx
+    src/NA61DataEventNew.cxx
     src/CentralityManager.cxx
     src/CentralitySlice.cxx
     src/TreeInterface.cxx
-
+    src/CentralityContainerNormalizer.cxx
+ 
     Glauber/GlauberFitter.cxx 
 
     Glauber/AliGlauberMC.cxx
@@ -75,7 +79,8 @@ set(SOURCES
     InputTree/DataTreeTrack.cxx
     InputTree/DataTreeTOFSegment.cxx
     InputTree/DataTreeV0Candidate.cxx 
-    
+    InputTree/DataTreeTrigger.cxx
+    InputTree/DataTreeBPD.cxx
     )
 
 

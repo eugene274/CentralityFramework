@@ -26,8 +26,8 @@ class CentralityManager : public TNamed
         void SetContainerFileName (TString ContainerFileName) { fContainerFileName = ContainerFileName; }
         void CopyNa61ExpDataToContainer (TString dir);
         void LoadDataFromContainer (Int_t Det1Id, Int_t Det2Id = -1); 
-        void RunSliceFinder() { fSlicesFinder->RunSliceFinder(fRunId); }
-        void SetRunId (Int_t RunId) { fRunId = RunId;}   
+        void RunSliceFinder() { fSlicesFinder->RunSliceFinder(); }
+        void SetGetterRunId (Int_t RunId) { fCentralityGetter->SetRunId(RunId); }
         void SetNumberOfSlices (Int_t num) { fSlicesFinder->SetNumberOfSlices(num); }
         void SetSliceStep (Float_t step) { fSlicesFinder->SetSliceStep(step); }
         
@@ -51,7 +51,6 @@ class CentralityManager : public TNamed
         
         void SetDirectory (TString dir) { fSlicesFinder->SetDir(dir); }
 	/**   Getters  **/
-        Int_t GetRunId () { return fRunId; }
         
     private:
 
@@ -61,8 +60,6 @@ class CentralityManager : public TNamed
         CentralitySlicesFinder *fSlicesFinder;
         CentralityGetter *fCentralityGetter;
         NA61DataEvent *fNA61DataEvent;
-
-        Int_t fRunId;
         std::vector <TString> fDetNames;
         
 	ClassDef(CentralityManager, 2);

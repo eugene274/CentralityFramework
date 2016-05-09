@@ -7,13 +7,13 @@
 #pragma link C++ class GlauberFitter+;
 #pragma link C++ class CentralityDetectorEvent+;
 #pragma link C++ class CentralityEventContainer+;
-
 #pragma link C++ class CentralityGetter+;
 #pragma link C++ class CentralitySlicesFinder+;
-
 #pragma link C++ class CentralityManager+;
 #pragma link C++ class CentralitySlice+;
-
+#pragma link C++ class NA61DataEventNew+;
+#pragma link C++ class NA61DataEvent+;
+#pragma link C++ class CentralityContainerNormalizer+;
 
 #pragma link C++ class AliGlauberMC+;
 #pragma link C++ class AliGlauberNucleon+;
@@ -27,6 +27,8 @@
 #pragma link C++ class DataTreeTrack+;
 #pragma link C++ class DataTreeTOFSegment+;
 #pragma link C++ class DataTreeV0Candidate+;    
+#pragma link C++ class DataTreeTrigger+;
+#pragma link C++ class DataTreeBPD+;
 
 #pragma link C++ class TreeInterface+;    
 

@@ -14,7 +14,6 @@ int main()
     
     CentralityManager *manager = new CentralityManager;
     manager->SetDirectory(dir);
-    manager->SetRunId (RunId);
      
 //  For CentralityFinder 
 //  ************************************   

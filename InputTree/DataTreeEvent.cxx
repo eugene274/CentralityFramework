@@ -7,6 +7,8 @@
 #include "DataTreeTOFSegment.h"
 #include "DataTreeV0Candidate.h"
 #include "DataTreeMCTrack.h"
+#include "DataTreeTrigger.h"
+#include "DataTreeBPD.h"
 
 DataTreeEvent::DataTreeEvent() : TObject(),
 ProcessFlag(false),
@@ -21,7 +23,11 @@ nV0Candidates(0),
 arrV0CandidatesMCpid (new TClonesArray("DataTreeV0Candidate")),
 nV0CandidatesMCpid(0),
 arrMCTracks (new TClonesArray("DataTreeMCTrack")),
-nMCTracks(0)
+nMCTracks(0),
+arrTriggers (new TClonesArray("DataTreeTrigger")),
+nTriggers(0),
+arrBPDs (new TClonesArray("DataTreeBPD")),
+nBPDs(0)
 {
 //     std::cout << "Constructor" << std::endl;
 }

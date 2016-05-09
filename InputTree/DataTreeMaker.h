@@ -4,7 +4,7 @@
 #include "CbmMCEventData.h"
 #include "CbmPsdEventData.h"
 #include "CbmStsEventData.h"
-#include "CbmMCEventHeader.h"
+// #include "CbmMCEventHeader.h"
 //#include "CbmAnaParticleData.h"
 
 #include "KFMCParticle.h"
@@ -29,6 +29,10 @@
 #include "TFile.h"
 #include "FairMCEventHeader.h"
 #include "UEvent.h"
+
+// #include "CbmL1PFFitter.h"
+#include "CbmKFVertex.h"
+// #include "L1FieldRegion.h"
 
 #include "DataTreeEvent.h"
 #include "DataTreeTrack.h"
@@ -71,6 +75,7 @@ private:
   
     int fCurEvent;
 //     CbmMCEventHeader* fHeader;
+    CbmVertex* fPrimVtx;
     FairMCEventHeader* fHeader;
     TClonesArray* flistPSDhit;
     TClonesArray* flistPSDdigit;

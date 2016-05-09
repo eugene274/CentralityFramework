@@ -38,12 +38,10 @@ void CentralityManager::CopyNa61ExpDataToContainer (TString dir)
         else if  (fDetNames.at(i) == "TPC")   { fNA61DataEvent->isTPC = true;   fNA61DataEvent->TPCid = i; }
         else {
             std::cout << "*** CopyNa61ExpDataToContainer *** : Detector name " << fDetNames.at(i) << " is not supported for NA61. Please choose one of: PSD1, PSD2, PSD3, TPC" << std::endl;
-
         }
-        
     }
 
-    fNA61DataEvent->SetData ( dir, fRunId );
+    fNA61DataEvent->SetData ( dir, 0 );
     fNA61DataEvent->fOutFile = fContainerFileName;
     fNA61DataEvent->Loop();
 }

@@ -18,7 +18,9 @@ CentralityGetter::CentralityGetter() :
 fNSlices (20),
 isDet1Int(false),
 isDet2Int(false),
-fSlice (new CentralitySlice)
+fSlice (new CentralitySlice),
+fDet1Norm (-1),
+fDet2Norm (-1)
 {
 }
 
@@ -35,6 +37,35 @@ void CentralityGetter::LoadCentalityDataFile (TString fileName)
     fCentrTree->SetBranchAddress("CentralitySlice", &fSlice);   
 }
 
+void CentralityGetter::SetRunId (Int_t RunId)
+{
+    fCentrTree->GetEntry(0);    
+    UInt_t nRuns = fSlice->GetRunIdVec().size();
+    Bool_t isOK = false;
+    
+//     std::cout << nRuns << std::endl;
+    
+    for (UInt_t i=0; i<nRuns; i++)
+    {
+        if (fSlice->GetRunIdVec().at(i) == RunId)
+        {
+//             std::cout << fSlice->GetRunIdVec().at(i) << std::endl;
+            isOK = true;
+            fDet1Norm = fSlice->GetDet1NormVec().at(i);
+            if ( fSlice->GetDet2NormVec().size() > i)   fDet2Norm = fSlice->GetDet2NormVec().at(i);
+            fRunId = RunId;
+            break;
+        }
+    }
+    if (!isOK)   std::cout << "*** Warning! *** Corrections for run # " << RunId << " was not found! Uncorrected value will be used!" << std::endl;
+    if (isOK)    std::cout << "   Correction factor(s) for run # " << RunId << " = " << fDet1Norm ;
+    if (isOK && fDet2Norm != -1)    std::cout << "  and  " << fDet2Norm ;
+    if (isOK)  std::cout << std::endl;
+    
+}
+
+
+
 Float_t CentralityGetter::GetCentrality (Double_t det1)
 {    
     float centrality = -1;
@@ -49,6 +80,7 @@ Float_t CentralityGetter::GetCentrality (Double_t det1)
 
     }
     
+    if (fDet1Norm != -1)  det1 *= fDet1Norm;
     det1 /= fSlice->GetDet1Max();
     bool isOK = false;
 
@@ -109,20 +141,29 @@ Float_t CentralityGetter::GetCentrality (Double_t det1, Double_t det2)
         Float_t rand2 = random->Rndm()/* - 0.5*/;  /*cout << rand1 << endl;*/  
         det2 += rand2; 
     }
+    
+    if (fDet1Norm != -1)  det1 *= fDet1Norm;
+    if (fDet2Norm != -1)  det2 *= fDet2Norm;
+    
     det1 /= fSlice->GetDet1Max();
     det2 /= fSlice->GetDet2Max();    
     bool isOK = false;
 
+//     cout  << "   det1 = " << det1 << "   det2 = " << det2  << endl;
+        
     Float_t x0 = (det2-fSlice->GetAi(0))/fSlice->GetBi(0);
     Float_t xn = (det2-fSlice->GetAi(NSlices-1))/fSlice->GetBi(NSlices-1);
     Int_t direction = fSlice->GetDirectionCentralEvents();
+
+//     cout  << "   x0 = " << x0 << "   xn = " << xn  << endl;
+
     
     if ( (direction == 1 && det1 > x0) || (direction == 0 && det1 < x0) )  //most central events
     {
         centrality = step*(0.5);
         return centrality;
     }
-    if ( (direction == 1 && det1 < x0) || (direction == 0 && det1 > x0) )  //most peripheral events
+    if ( (direction == 1 && det1 < xn) || (direction == 0 && det1 > xn) )  //most peripheral events
     {
         centrality = step*(NSlices+0.5);
         return centrality;
@@ -134,8 +175,6 @@ Float_t CentralityGetter::GetCentrality (Double_t det1, Double_t det2)
         Float_t xi = (det2-fSlice->GetAi(i))/fSlice->GetBi(i);
         Float_t xi_1 = (det2-fSlice->GetAi(i-1))/fSlice->GetBi(i-1);
 
-//         cout << "xi = " << xi << "  xi+1 = " << xi_1  << "   det1 = " << det1 << "   det2 = " << det2  << endl;
-
         if ( (det1-xi)*(det1-xi_1) <= 0 )
         {
             centrality = step*(i+0.5);
@@ -144,8 +183,8 @@ Float_t CentralityGetter::GetCentrality (Double_t det1, Double_t det2)
         }
     }        
         
-//     if (!isOK)
-//         cout << "*** Warning *** GetCentrality: centrality is not found!" << endl;
+    if (!isOK)
+        cout << "*** Warning *** GetCentrality: centrality is not found!" << endl;
     
     return centrality;
 }

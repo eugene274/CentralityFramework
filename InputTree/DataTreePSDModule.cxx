@@ -21,6 +21,7 @@ nSections(0)
     {
 	AddSection();
     }
+    SectionNumberCut = nSections;
 }
 
 DataTreePSDModule::~DataTreePSDModule()

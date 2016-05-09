@@ -28,6 +28,7 @@
 #include "TRandom.h"
 
 #include "CentralitySlicesFinder.h"
+#include "CentralityContainerNormalizer.h"
 
 
 
@@ -49,7 +50,6 @@ CentralitySlicesFinder::CentralitySlicesFinder()
     fCentralityMax(100),
     fPrecision(0.01),
     fDirectionCentralEvents (1),
-    fRunId (0),
     is1DAnalisys(false),
     isDet1Int(false),
     isDet2Int(false),
@@ -92,179 +92,65 @@ void CentralitySlicesFinder::WriteOutputData ()
 
 void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
 {
-    TCanvas *c2 = new TCanvas("c2", "canvas", 800, 800);
-    
-    fInFile = new TFile(fInFileName.Data());
-    if (!fInFile)
-    {
-        cout << "Cannot open input file! Please check file name and path." << endl;
-        exit (-1);
-    }
-    
-    if ( fInFile->IsOpen() ) cout << "*** CentralitySlicesFinder::LoadInputData ***  File opened successfully" << endl;
-        
-    fInTree = (TTree*) fInFile->Get("na61_data");    //TODO set Tree name as parameter
-    
-    fContainer = new CentralityEventContainer;
-    fInTree->SetBranchAddress("CentralityEventContainer", &fContainer);   
-    
-    fNormTree = new TTree ("NormTree", "Norm Tree");
-    fNormTree->SetDirectory(0); 
-    
-    fNormTree->Branch("det1", &det1, "det1/F");
-    if (Det2Id != -1) fNormTree->Branch("det2", &det2, "det2/F");
-    if (fIsSimData) fNormTree->Branch("B", &fB, "fB/F");
-    fNormTree->Branch("RunId", &fRunId, "RunId/I");
-    
-    if (Det2Id != -1) GetNormalization (Det1Id, Det2Id);
-        else          GetNormalization (Det1Id);
-    
-    TRandom* random = new TRandom;
-    random->SetSeed();
-    Float_t rand1 = 0, rand2 = 0;
 
-    Int_t nTotalEvents = fInTree->GetEntries();
+    CentralityContainerNormalizer *fCCNorm = new CentralityContainerNormalizer;
+
+    fCCNorm->SetDet1Name (fDet1Name) ;  
+    fCCNorm->SetDet2Name (fDet2Name) ;  
+    fCCNorm->SetInFileName (fInFileName) ;     
+    fCCNorm->Do1DAnalisys (is1DAnalisys) ;
+    fCCNorm->Det1IsInt (isDet1Int) ;
+    fCCNorm->Det2IsInt (isDet2Int) ;
+    fCCNorm->SetDir (CFdir) ;
+    fCCNorm->LoadInputData (Det1Id, Det2Id);
     
-    for (Int_t i=0; i<nTotalEvents; i++)
-    {
-        fInTree->GetEntry(i);
-                
-        det1 = (fContainer->GetDetectorWeight(Det1Id))/det1max;
-        if (Det2Id != -1)  det2 = fContainer->GetDetectorWeight(Det2Id)/det2max;
-        if (fIsSimData)  fB = fContainer->GetB();
-        fRunId = fContainer->GetRunId();
-        
-//         std::cout << "b = " << fContainer->GetB() << std::endl;
-        
-        if (isDet1Int)  { rand1 = random->Rndm()/* - 0.5*/;  /*cout << rand1 << endl;*/  det1 += rand1/det1max; }
-        if (isDet2Int && Det2Id != -1)  { rand2 = random->Rndm()/* - 0.5*/;  det2 += rand2/det2max; }
-        
-        fNormTree->Fill();        
+    fNormTree = fCCNorm->GetNormTree ();
+    fNormTree->SetBranchAddress("det1", &det1);
+    if (Det2Id != -1) fNormTree->SetBranchAddress("det2", &det2);
+    if (fIsSimData)   fNormTree->SetBranchAddress("B", &fB);
+
+    
+    fDet1NormVec    = fCCNorm->GetDet1NormVec    () ;
+    fDet2NormVec    = fCCNorm->GetDet2NormVec    () ;
+    fRunIdVec       = fCCNorm->GetRunIdVec       () ;
+    nEventsInRunVec = fCCNorm->GetEventsInRun1Vec () ; //TODO
+    det1max = fCCNorm->GetDet1Max ();
+    det2max = fCCNorm->GetDet2Max ();
+    
+    std::vector <Float_t> TempVec;
+    for (Int_t j=0; j<fRunIdVec.size(); j++)
+        TempVec.push_back(fRunIdVec.at(j));
+
+    TGraph *gr1 = new TGraph (Int_t(fRunIdVec.size()), &(TempVec[0]), &(fDet1NormVec[0]) );
+    gr1->SetMarkerStyle(23);    
+    gr1->GetXaxis()->SetTitle( "Run" );
+    gr1->GetYaxis()->SetTitle("<M_{TPC}>");    
+    gr1->Draw("APL");
+
+    if (Det2Id != -1){ 
+        TGraph *gr2 = new TGraph (Int_t(fRunIdVec.size()), &(TempVec[0]), &(fDet2NormVec[0]) );
+        gr2->SetMarkerStyle(23);    
+        gr2->SetMarkerColor(kRed);    
+        gr2->SetLineColor(kRed);    
+        gr2->Draw("PLsame");
+    
+        TLegend* leg1 = new TLegend(0.7,0.75,0.89,0.89);
+        leg1->AddEntry(gr1, fDet1Name, "p");    
+        leg1->AddEntry(gr2, fDet2Name, "p");    
+        leg1->Draw("same");
+    
+    
     }
     
-    fNormTree->Draw("det1 >> h1 (1000, 0, 1.1)");
-    c2->Print( CFdir + "QA/norm.pdf");
-    c2->Print( CFdir + "QA/norm.root");
 }
 
 
 void CentralitySlicesFinder::GetNormalization (Int_t Det1Id, Int_t Det2Id)
 {
-    std::cout << "Normalization of centrality container..." << std::endl;
-    det1max = 0;
-    det2max = 0;
-    
-    Int_t nTotalEvents = fInTree->GetEntries();
-
-
-    for (Int_t i=0; i<nTotalEvents; i++)
-    {
-        fInTree->GetEntry(i);
-
-        Float_t sig1 = fContainer->GetDetectorWeight(Det1Id);
-        Float_t sig2 = fContainer->GetDetectorWeight(Det2Id);
-        
-        if (sig1 > det1max)    det1max = sig1;
-        if (sig2 > det2max)    det2max = sig2;        
-    }
-    
-    Int_t n1 = 100, n2 = 100;
-    if (isDet1Int)  n1 = det1max;
-    if (isDet2Int)  n2 = det2max;
-    
-    
-    TString DrawPar1 = Form ( "CentralityEventContainer.GetDetectorWeight(%d) >> h1(%d, 0., %f)", Det1Id, n1, det1max) ;
-    fInTree->Draw( DrawPar1.Data() );        
-    TH1F *h1 = (TH1F*)gPad->GetPrimitive("h1");
-
-    TString DrawPar2 = Form ( "CentralityEventContainer.GetDetectorWeight(%d) >> h2(%d, 0., %f)", Det2Id, n2, det2max) ;
-    fInTree->Draw( DrawPar2.Data() );        
-    TH1F *h2 = (TH1F*)gPad->GetPrimitive("h2");
-
-    
-    for (Int_t i=n1/2; i<n1; i++)
-    {
-//         std::cout << "h1 = " << h1->GetBinContent(i+1) << std::endl; 
-        if (h1->GetBinContent(i+1) < 2)
-        {
-            det1max *= i/float(n1);
-            break;
-        }
-    }
-    
-    for (Int_t i=n2/2; i<n2; i++)
-    {
-//         std::cout << "h1 = " << h1->GetBinContent(i+1) << std::endl; 
-        if (h2->GetBinContent(i+1) < 2)
-        {
-            det2max *= i/float(n2);
-            break;
-        }
-    }    
-    std::cout << "   det1max = " << det1max << std::endl; 
-    std::cout << "   det2max = " << det2max << std::endl; 
-    
-    std::cout << "Normalization done!" << std::endl;
-    
 }
 
 void CentralitySlicesFinder::GetNormalization (Int_t Det1Id)
 {
-    std::cout << "Normalization of centrality container..." << std::endl;
-    
-    det1max = 0;
-    
-    Int_t nTotalEvents = fInTree->GetEntries();
-
-
-    for (Int_t i=0; i<nTotalEvents; i++)
-    {
-        fInTree->GetEntry(i);
-
-        Float_t sig1 = fContainer->GetDetectorWeight(Det1Id);
-        if (sig1 > det1max)    det1max = sig1;
-    }
-    
-    Int_t n1 = 100;
-    if (isDet1Int)  n1 = det1max;
-    
-    TString DrawPar1 = Form ( "CentralityEventContainer.GetDetectorWeight(%d) >> h1(%d, 0., %f)", Det1Id, n1, det1max) ;
-    fInTree->Draw( DrawPar1.Data() );        
-    TH1F *h1 = (TH1F*)gPad->GetPrimitive("h1");
-    
-    for (Int_t i=n1/2; i<n1; i++)
-    {
-//         std::cout << "h1 = " << h1->GetBinContent(i+1) << std::endl; 
-        if (h1->GetBinContent(i+1) < 1)
-        {
-            det1max *= i/(float)n1;
-            break;
-        }
-    }
-    
-//     c2->Print( CFdir + "QA/norm.pdf");
-//     c2->Print( CFdir + "QA/norm.root");
-    
-    std::cout << "   det1max = " << det1max << std::endl; 
-    std::cout << "Normalization done!" << std::endl;
-}
-
-void CentralitySlicesFinder::RunSliceFinder (Int_t RunId)
-{
-    std::cout << "Starting SliceFinder" << std::endl;
-    fCentrTree = new TTree ("CentrTree", "Tree with slices parameters");
-    fCentrTree->Branch("CentralitySlice", "CentralitySlice", &fSlice);
-
-    FindCentralitySlices( RunId );
-    
-    TString filename = Form(CFdir + "root_files/Slices_%s_%s_%d.root", fDet1Name.Data(), fDet2Name.Data(), fRunId );
-    
-    fSlicesFile = new TFile (filename, "RECREATE");
-    std::cout << "   Output file name is " << filename << std::endl;
-    
-    fCentrTree->Write();
-    std::cout << "SliceFinder - done!" << std::endl;
-    
 }
 
 void CentralitySlicesFinder::Fit2DCorrelation ()
@@ -276,7 +162,7 @@ void CentralitySlicesFinder::Fit2DCorrelation ()
     fNormTree->Draw( "det2 : det1  >> h1(120, 0., 1.2, 120, 0., 1.2)", fCuts, "colz");
     
     TH2F *h2D = (TH2F*)gPad->GetPrimitive("h1");
-    h2D->SetMaximum(40);
+//     h2D->SetMaximum(40);
     h2D->SetTitle ("2D correlation fit");
     h2D->GetXaxis()->SetTitle( Form ( "%s/%s_{max}", fDet1Name.Data(), fDet1Name.Data() ) );
     h2D->GetYaxis()->SetTitle( Form ( "%s/%s_{max}", fDet2Name.Data(), fDet2Name.Data() ) );   
@@ -406,7 +292,7 @@ void CentralitySlicesFinder::FitCorrection ( int n_points )
 //     for (int i=0; i<X4fit.size(); i++ )
 //         cout << "x = " << X4fit.at(i) << "       y = " << Y4fit.at(i) << endl;
     
-    TGraph *gr = new TGraphErrors( X4fit.size(), &(X4fit[0]), &(Y4fit[0]), &(ErrorX[0]), &(ErrorY[0]));
+    TGraphErrors *gr = new TGraphErrors( X4fit.size(), &(X4fit[0]), &(Y4fit[0]), &(ErrorX[0]), &(ErrorY[0]));
     gr->GetXaxis()->SetLimits(0.0, 1.0);
     gr->GetYaxis()->SetRangeUser(0.0, 1.0);
     gr->SetMarkerStyle(22);  
@@ -437,7 +323,7 @@ void CentralitySlicesFinder::FitCorrection ( int n_points )
 }
 
 
-void CentralitySlicesFinder::FindCentralitySlices (Int_t RunId )
+void CentralitySlicesFinder::FindCentralitySlices ( )
 {
 //     std::cout << "Start ..." << std::endl;
     gStyle->SetOptStat(0000);
@@ -445,13 +331,11 @@ void CentralitySlicesFinder::FindCentralitySlices (Int_t RunId )
     
     nIntervals = Int_t (100/fSliceStep);
     
-    fCuts = fBaseCuts && Form( "RunId == %d", RunId );
-    fRunId = RunId;
-//     std::cout << "RunId = " << fRunId << endl;     
+    fCuts = fBaseCuts;
     
     TString distrName;
-    if (!is1DAnalisys)  distrName = Form("%s_%s_run_%d_centrality_QA", fDet1Name.Data(), fDet2Name.Data(), fRunId );
-    else                distrName = Form("%s_run_%d_centrality_QA", fDet1Name.Data(), fRunId );
+    if (!is1DAnalisys)  distrName = Form("%s_%s_centrality_QA", fDet1Name.Data(), fDet2Name.Data() );
+    else                distrName = Form("%s_centrality_QA", fDet1Name.Data() );
         
     TCanvas *c1 = new TCanvas("c1", "canvas", 1500, 900);
 
@@ -464,7 +348,6 @@ void CentralitySlicesFinder::FindCentralitySlices (Int_t RunId )
         c1->SetLogy();
     }
     
-    fRunId = RunId;
     FindSlices ();    
 
     /*if (!is1DAnalisys)  */FindMeanSignalsInSlice();
@@ -476,10 +359,14 @@ void CentralitySlicesFinder::FindCentralitySlices (Int_t RunId )
 //     fSlicesFile = new TFile ( Form(CFdir + "root_files/Slices_%s_%s_%d.root", fDet1Name.Data(), fDet2Name.Data(), RunId ) , "RECREATE");
 
     fSlice->SetDetMax (det1max, det2max);
-    fSlice->SetRunId (RunId);
     fSlice->SetFitFunction (fFitFunction);
     fSlice->SetSlicesStep (fSliceStep);
     fSlice->SetDirectionCentralEvents (fDirectionCentralEvents);
+    
+    fSlice->SetDet1NormVec (fDet1NormVec);
+    fSlice->SetDet2NormVec (fDet2NormVec);
+    fSlice->SetRunIdVec    (fRunIdVec   );
+    
     
     fCentrTree->Fill();  
     
@@ -498,11 +385,10 @@ void CentralitySlicesFinder::FindSlices ( )
         for (int i=0; i<nFinalPar; i++)
             finalPar[i] = fFitFunction->GetParameter(i);
     
-    fNormTree->Draw(">>elist", Form("RunId == %d", fRunId) );
+    fNormTree->Draw(">>elist" );
     TEventList* elist = (TEventList*)gDirectory->Get("elist");
     int nTotalEvents = fNormalization > 0 ? fNormalization : elist->GetN();
    
-    std::cout << "   RunId = " << fRunId << endl;     
     std::cout << "   TotalEvents = " << nTotalEvents << endl; 
 
     fNormTree->Draw(">>elist1", fCuts );
@@ -753,6 +639,23 @@ void CentralitySlicesFinder::find_norm (double par[], double x, double kb[], int
 
 }
 
+void CentralitySlicesFinder::RunSliceFinder ()
+{
+    std::cout << "Starting SliceFinder" << std::endl;
+    fCentrTree = new TTree ("CentrTree", "Tree with slices parameters");
+    fCentrTree->Branch("CentralitySlice", "CentralitySlice", &fSlice);
+
+    FindCentralitySlices( );
+    
+    TString filename = Form(CFdir + "root_files/Slices_%s_%s.root", fDet1Name.Data(), fDet2Name.Data() );
+    
+    fSlicesFile = new TFile (filename, "RECREATE");
+    std::cout << "   Output file name is " << filename << std::endl;
+    
+    fCentrTree->Write();
+    std::cout << "SliceFinder - done!" << std::endl;
+    
+}
 
 void CentralitySlicesFinder::QA ()
 {

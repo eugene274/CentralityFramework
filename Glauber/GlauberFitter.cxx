@@ -20,80 +20,6 @@ GlauberFitter::GlauberFitter()
 
 void GlauberFitter::TestFunc(Int_t nf, Float_t f0, Float_t f1, Int_t nsigma, Int_t nEvents)
 {
-
-//     Float_t mu, k, sigma;
-//     
-//     mu = 0.2;
-//     sigma = 2;
-//     k = mu/(sigma/mu - 1);
-// 
-//     SetNBDhist(mu,  k);
-// 
-//     Float_t Na = 50000;
-//     TH1F *test = new TH1F ("test", "", 50, 0, 50);
-//     Float_t nHits = 0;
-//     for (Int_t j=0; j<Na; j++){
-//         Float_t temp = (int)hNBD->GetRandom();
-//         nHits += temp;
-//         test->Fill(temp);
-// //         std::cout << "GetRandom = " << temp << std::endl;
-//     }
-//     test->SetLineColor(2);
-//     
-//     hNBD->DrawNormalized();
-//     test->DrawNormalized("same");
-    
-    
-    TString filename = Form ( "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/Glauber/root_files/test_%d_%f_%f.root", nf, f0, f1 );
-    TFile *file = new TFile(filename, "recreate");    
-    TTree *tree = new TTree("test_tree", "tree" );
-    
-    TH1F *h1 = new TH1F ("h1", "", 125, 0, 250);
-           
-    Float_t f, mu, k;
-    Float_t chi2 = 1e10;
-    Float_t sigma;
-
-    tree->Branch("histo", "TH1F", &h1, 32000, 0);
-    tree->Branch("f",    &f,    "f/F");   
-    tree->Branch("mu",   &mu,   "mu/F");   
-    tree->Branch("k",    &k,    "k/F");   
-    tree->Branch("chi2", &chi2, "chi2/F");   
-    tree->Branch("sigma",&sigma,"sigma/F");   
-
-
-    for (Int_t i=0; i<nf; i++)
-    {
-        Float_t temp_f = f0 + (f1-f0)/nf*(i+0.5);
-        
-        for (Int_t j=0; j<nsigma; j++)
-        {
-            Float_t temp_mu = fMultMax/(temp_f*(fNpartMax - 75) + (1-temp_f)*(fNcollMax - 150));
-            sigma = temp_mu + (j+0.5)/nsigma;
-            Float_t temp_k = temp_mu/(sigma/temp_mu - 1);;
-            Float_t temp_chi2;
-           
-            std::cout << "f = " << temp_f << "   mu0 = " << temp_mu << "    k = " << temp_k << "    sigma = " << sigma << std::endl;    
-            
-            Float_t mu_min = 0.4*temp_mu, mu_max = 0.9*temp_mu;
-
-            FindMuGoldenSection (&temp_mu, &temp_chi2, mu_min, mu_max, temp_f, temp_k, nEvents, 10);
-
-            f = temp_f;
-            k = temp_k;
-            mu = temp_mu;
-            chi2 = temp_chi2;
-            h1 = hGlaub;
-            
-            tree->Fill();
-            std::cout << "f = " << temp_f << "   mu1 = " << temp_mu << "    k = " << temp_k << "                Chi2Min = " << temp_chi2 << std::endl;    
-        } 
-    }
-    
-    tree->Write ();
-
-    file->Close();
-    
 }
 
 
@@ -274,7 +200,7 @@ void GlauberFitter::FitGlauber (Int_t nf, Float_t f0, Float_t f1, Int_t nsigma, 
     Float_t Chi2Min = 1e10;
     TString dirname = fOutDirName;
 
-    TString filename = Form ( "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/Glauber/root_files/%s/test_%d_%4.2f_%4.2f.root", dirname.Data(), nf, f0, f1 );
+    TString filename = Form ( "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/Glauber/root_files/%s/test_%d_%4.2f_%4.2f_%d.root", dirname.Data(), nf, f0, f1, fFitMultMin );
     TFile *file = new TFile(filename, "recreate");    
     TTree *tree = new TTree("test_tree", "tree" );
     
@@ -328,15 +254,15 @@ void GlauberFitter::FitGlauber (Int_t nf, Float_t f0, Float_t f1, Int_t nsigma, 
                 hBestFit->Draw();
                 gPad->Update();
                 
-                std::cin >> f_fit;
-                std::cout << "!!!!!!!!!!!!!!!!!" << std::endl;
+//                 std::cin >> f_fit;
+//                 std::cout << "!!!!!!!!!!!!!!!!!" << std::endl;
                 
             }            
             
             
         } 
     }
-    
+    std::cout << " Total number of events = " << hGlaub->Integral(0, 1100) << std::endl;
     tree->Write ();
     file->Close();
 

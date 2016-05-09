@@ -6,6 +6,7 @@
 #include "TClonesArray.h"
 #include "TObject.h"
 #include "DataTreePSDSection.h"
+#include "TMath.h"
 
 class DataTreePSDModule : public TObject
 {
@@ -16,15 +17,38 @@ public:
     DataTreePSDModule(int idx, int inSections);
     ~DataTreePSDModule();
     
-    void ClearEvent(){for(int i=0;i<nSections;i++){GetSection(i)->ClearEvent();} Energy = 0.; nFiredSections = 0; ProcessFlag = false;}
-    void Process(){ Energy = 0.; nFiredSections = 0; for(int i=0;i<nSections;i++){Energy+=GetSection(i)->GetEnergy(); if(GetSection(i)->GetEnergy() > 0)nFiredSections++;} ProcessFlag = true; }
+    void ClearEvent()
+    {
+        for(int i=0;i<nSections;i++)
+        {
+            GetSection(i)->ClearEvent();
+        }
+        Energy = 0.;
+        nFiredSections = 0;
+        ProcessFlag = false;
+    }
+    void Process()
+    {
+        Energy = 0.;
+        nFiredSections = 0;
+        for(int i=0;i<SectionNumberCut;i++)
+        {
+            Energy+=GetSection(i)->GetEnergy();
+            if(GetSection(i)->GetEnergy() > 0){nFiredSections++;}
+        }
+        ProcessFlag = true;
+    }
     
 //     bool GetProcessFlag(){return ProcessFlag;}
     int GetId(){return id;}
+    int GetSectionNumberCut(){return SectionNumberCut;}
     double GetPositionComponent(int idx){return Position[idx];}
-    double GetEnergy(){ if(!ProcessFlag){Process();} return Energy; }
-    int GetNFiredSections(){ if(!ProcessFlag){Process();} return nFiredSections; }
+//     double GetPhi(){if (TMath::ATan2(Position[1],Position[0]) < 0){return 2*TMath::Pi()+TMath::ATan2(Position[1],Position[0]);}else {return TMath::ATan2(Position[1],Position[0]);}}
+    double GetPhi(){return TMath::ATan2(Position[1],Position[0]);}
+    double GetEnergy(){ Process(); return Energy; }
+    int GetNFiredSections(){ Process(); return nFiredSections; }
     
+    void SetSectionNumberCut(int fValue){SectionNumberCut = fValue;}
     void SetPosition(double fX, double fY, double fZ){Position[0]=fX; Position[1]=fY; Position[2]=fZ;}
     void SetPositionComponent(int idx, double fValue){Position[idx] = fValue;}
 //     void SetEnergy(double fValue){Energy = fValue;}
@@ -41,6 +65,7 @@ private:
     bool ProcessFlag;
     
     int nSections;			//number of section in the module
+    int SectionNumberCut;               //max depth in sections to calculate energy
     
     int id;
     double Position[3];			//Position of the module in lab frame

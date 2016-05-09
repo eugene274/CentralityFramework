@@ -35,6 +35,11 @@ class CentralitySlice : public TNamed
         void SetSlicesStep (Float_t step) { fStep = step;}   
         void SetDirectionCentralEvents (Int_t d) {fDirectionCentralEvents = d;}
 
+        
+        void SetDet1NormVec (std::vector <Float_t> v) { fDet1NormVec = v; }        
+        void SetDet2NormVec (std::vector <Float_t> v) { fDet2NormVec = v; }        
+        void SetRunIdVec    (std::vector <Int_t> v) { fRunIdVec    = v; }  
+        
         /**   Getters  **/
         Int_t GetRunId () { return fRunId; }
         Float_t GetAi (Int_t i) { return  fAvec.at(i); }
@@ -75,6 +80,13 @@ class CentralitySlice : public TNamed
         std::vector <Float_t> GetMeanB () { return MeanB; }
         std::vector <Float_t> GetSigmaB () { return SigmaB; }
         std::vector <Float_t> GetMeanXY3 () { return MeanXY3; }
+        
+        std::vector <Float_t> GetDet1NormVec () { return fDet1NormVec; }
+        std::vector <Float_t> GetDet2NormVec () { return fDet2NormVec; }
+        std::vector <Int_t> GetRunIdVec    () { return fRunIdVec; }
+        
+        
+        
     private:
 
 	/**   Data members  **/
@@ -104,6 +116,11 @@ class CentralitySlice : public TNamed
 
         std::vector <Float_t> MeanB;
         std::vector <Float_t> SigmaB;
+
+        std::vector <Float_t> fDet1NormVec;
+        std::vector <Float_t> fDet2NormVec;
+        std::vector <Int_t>   fRunIdVec;
+
 
         TF1 *fFitFunction;
         
