@@ -32,8 +32,9 @@ set(INCLUDE
     include/CentralitySlice.h
     include/TreeInterface.h
     include/CentralityContainerNormalizer.h
+
     Glauber/GlauberFitter.h 
-    
+    Glauber/GlauberParGetter.h 
     Glauber/AliGlauberMC.h
     Glauber/AliGlauberNucleon.h     
     Glauber/AliGlauberNucleus.h  
@@ -66,6 +67,7 @@ set(SOURCES
     src/CentralityContainerNormalizer.cxx
  
     Glauber/GlauberFitter.cxx 
+    Glauber/GlauberParGetter.cxx 
 
     Glauber/AliGlauberMC.cxx
     Glauber/AliGlauberNucleon.cxx     
