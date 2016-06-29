@@ -6,58 +6,67 @@ void RunCentralityFramework()
     
     TString dir = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/";    
     
-    TString det1 = "PSD1";
-    TString det2 = "PSD2";
-    TString det3 = "PSD3";
-    TString det4 = "TPC";
+    TString det1 = "E_{PSD}^{1}";
+    TString det2 = "E_{PSD}^{2}";
+    TString det3 = "E_{PSD}^{3}";
+    TString det4 = "M_{STS}";
     
 //     TString ContainerFile = dir + "root_files/" + "na61_container_merged_nocuts.root";
-    TString ContainerFile = dir + "root_files/" + "na61_container_merged.root";
+//     TString ContainerFile = dir + "root_files/" + "na61_container_merged.root";
+//     TString ContainerFile = dir + "root_files/" + "na61_container_22912.root";
     
-    TCut cuts = "";//"det1 > 0.65 - det2";
+    
+    
+    TString ContainerFile = dir + "root_files/DCM-QGSM/" + "sis100_STS_PSD_SC_OFF_SL_OFF_2016_04_11.root";
+//     TString ContainerFile = dir + "root_files/DCM-QGSM/" + "sis100_electron_SC_OFF_SL_OFF_urqmd.root";
+    
+    TCut cuts = "det1 > 0.65 - det2";
     
     CentralityManager *manager = new CentralityManager;
     manager->SetDirectory(dir);
      
 //  For CentralityFinder 
 //  ************************************   
-    manager->AddDetector("TPC");  
-    manager->AddDetector("PSD1");
-    manager->AddDetector("PSD2");
-    manager->AddDetector("PSD3");
-    manager->AddDetector("PSD4");
-    manager->AddDetector("PSD12");
-    manager->AddDetector("PSD1234");
+    manager->AddDetector(det1);
+    manager->AddDetector(det2);
+    manager->AddDetector(det3);
+    manager->AddDetector(det4);  
+
+//     manager->AddDetector("PSD4");
+//     manager->AddDetector("PSD12");
+//     manager->AddDetector("PSD1234");
 
 
     manager->SetContainerFileName ( ContainerFile );  
 //     manager->CopyNa61ExpDataToContainer(na61datadir);
-    manager->SetNormalization (733440);
-    manager->IsSimData(false);
-    manager->Det1IsInt(true);
-//     manager->Do1DAnalisys(false);
-    manager->SetDetectorsForCentralityAnalisys ("TPC");
-    manager->SetCentralityMax(80);
-    manager->SetDirectionCentralEvents(1);
+//     manager->SetNormalization (733440);
+    manager->IsSimData(true);
+    manager->Det1IsInt(false);
+    manager->Do1DAnalisys(true);
+    manager->SetDetectorsForCentralityAnalisys (det1, det4);
+    manager->SetCentralityMax(60);
+    manager->SetDirectionCentralEvents(0);
     manager->SetSliceStep (5);
     manager->SetCuts (cuts);
     
-//     manager->RunSliceFinder();
-//     manager->WriteCentralityFile();
+    manager->RunSliceFinder();
+    manager->WriteCentralityFile();
+    manager->QA();
+
+
     
-//  
-//     
-//     manager->Det1IsInt(false);
-//     manager->Do1DAnalisys(false);
-//     manager->SetDetectorsForCentralityAnalisys (det1, det2);
+//     manager->IsSimData(true);
+//     manager->Det1IsInt(true);
+// //     manager->Do1DAnalisys(false);
+//     manager->SetDetectorsForCentralityAnalisys (det4);
 //     manager->SetCentralityMax(100);
-//     manager->SetDirectionCentralEvents(0);
+//     manager->SetDirectionCentralEvents(1);
 //     manager->SetSliceStep (5);
 //     manager->SetCuts (cuts);
 //     
 //     manager->RunSliceFinder();
 //     manager->WriteCentralityFile();
-
+//     manager->QA();
 
 
 /*    
