@@ -50,7 +50,12 @@ class CentralityManager : public TNamed
         Float_t GetCentrality (Double_t det1, Double_t det2) { return fCentralityGetter->GetCentrality(det1, det2); }
         
         void SetDirectory (TString dir) { fSlicesFinder->SetDir(dir); }
+	void QA () { fSlicesFinder->QA(); }
+	
+	
 	/**   Getters  **/
+        CentralitySlicesFinder* GetSlicesFinder() { return fSlicesFinder;} 
+        CentralityGetter* GetCentralityGetter() { return fCentralityGetter;} 
         
     private:
 

@@ -27,7 +27,7 @@ class CentralitySlice : public TNamed
         void AddXYPar (Float_t mean, Float_t sigma) { MeanXY.push_back(mean);  SigmaXY.push_back(sigma);  }
 
         void AddXY3 (Float_t x3) { MeanXY3.push_back(x3);  }
-        void AddB (Float_t mean, Float_t sigma) { MeanB.push_back(mean);  SigmaB.push_back(sigma);  }
+        void AddB (Float_t mean, Float_t sigma, Float_t dmean = 0, Float_t dsigma = 0) { MeanB.push_back(mean);  SigmaB.push_back(sigma); dB.push_back(dmean); dSigmaB.push_back(dsigma);  }
         
         void SetNSlices (Int_t NSlices) { fNSlices = NSlices;}   
         void SetCentralityMax (Float_t CentralityMax) { fCentralityMax = CentralityMax;}   
@@ -79,6 +79,8 @@ class CentralitySlice : public TNamed
         
         std::vector <Float_t> GetMeanB () { return MeanB; }
         std::vector <Float_t> GetSigmaB () { return SigmaB; }
+        std::vector <Float_t> GetdB ()     { return dB; }
+        std::vector <Float_t> GetdSigmaB () { return dSigmaB; }
         std::vector <Float_t> GetMeanXY3 () { return MeanXY3; }
         
         std::vector <Float_t> GetDet1NormVec () { return fDet1NormVec; }
@@ -116,7 +118,9 @@ class CentralitySlice : public TNamed
 
         std::vector <Float_t> MeanB;
         std::vector <Float_t> SigmaB;
-
+        std::vector <Float_t> dB;
+        std::vector <Float_t> dSigmaB;
+        
         std::vector <Float_t> fDet1NormVec;
         std::vector <Float_t> fDet2NormVec;
         std::vector <Int_t>   fRunIdVec;

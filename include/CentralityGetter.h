@@ -8,7 +8,7 @@
 #include "TFile.h"
 #include "TF1.h"
 #include "CentralitySlice.h"
-
+#include "../Glauber/GlauberParGetter.h"
 // 
 
 class CentralityGetter 
@@ -33,7 +33,7 @@ class CentralityGetter
         Int_t GetNSlices () { return fNSlices; }
 
         void SetRunId (Int_t RunId);
-        
+        void GetGlauberB ();
     private:
 
         int fNSlices;

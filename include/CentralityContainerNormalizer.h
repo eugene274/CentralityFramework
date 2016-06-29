@@ -41,6 +41,7 @@ class CentralityContainerNormalizer  : public TNamed
 	void Do1DAnalisys (bool is) { is1DAnalisys = is; }
 	void Det1IsInt (Bool_t is) { isDet1Int = is; }
 	void Det2IsInt (Bool_t is) { isDet2Int = is; }
+        void IsSimData (Bool_t is = true)  { fIsSimData = is; }
 
 	void SetDir (TString dir) {CFdir = dir;}
 

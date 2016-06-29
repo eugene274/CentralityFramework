@@ -23,7 +23,6 @@ class NA61DataEventNew : public TNamed
     
     void WriteCentralityContainer();
 
-    bool isGoodTrack(int iTrk);
     bool isGoodEvent(Int_t nTPC_Tracks_Ref);
     bool isRefMultTrack(int iTrk);
 
