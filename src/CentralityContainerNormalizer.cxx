@@ -66,7 +66,7 @@ CentralityContainerNormalizer::~CentralityContainerNormalizer()
 
 void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
 {
-    TCanvas *c2 = new TCanvas("c2", "canvas", 800, 800);
+//     TCanvas *c2 = new TCanvas("c2", "canvas", 800, 800);
     
     fInFile = new TFile(fInFileName.Data());
     if (!fInFile)
@@ -77,7 +77,8 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     
     if ( fInFile->IsOpen() ) cout << "*** CentralityContainerNormalizer::LoadInputData ***  File opened successfully" << endl;
         
-    fInTree = (TTree*) fInFile->Get("na61_data");    //TODO set Tree name as parameter
+//     fInTree = (TTree*) fInFile->Get("na61_data");    //TODO set Tree name as parameter
+    fInTree = (TTree*) fInFile->Get("cbm_data");    //TODO set Tree name as parameter
     fContainer = new CentralityEventContainer;
     fInTree->SetBranchAddress("CentralityEventContainer", &fContainer);   
     
@@ -144,17 +145,16 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     
     
     
-    fNormTree->Draw("det1 >> h1 (1000, 0, 1.1)");
-    h1Corr->SetLineColor(kRed);
+//     fNormTree->Draw("det1 >> h1 (1000, 0, 1.1)");
+//     h1Corr->SetLineColor(kRed);
 
-    h1NotCorr->Draw();
-    h1Corr   ->Draw("same");
-    h1Corr   ->SaveAs("hTPC_ref.root");
+//     h1NotCorr->Draw();
+//     h1Corr   ->Draw("same");
+//     h1Corr   ->SaveAs("hTPC_ref.root");
     
-    c2->Print( CFdir + "QA/norm.pdf");
-    c2->Print( CFdir + "QA/norm.root");
-    
-    c2->Delete();
+//     c2->Print( CFdir + "QA/norm.pdf");
+//     c2->Print( CFdir + "QA/norm.root");
+//     c2->Delete();
     
     std::cout << "Normalization and correction done!" << std::endl;
     

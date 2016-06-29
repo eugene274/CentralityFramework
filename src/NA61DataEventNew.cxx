@@ -145,11 +145,6 @@ std::vector <Float_t> NA61DataEventNew::SetPsdVector(Int_t subgroup)
     return psdEnergies;
 }
 
-bool NA61DataEventNew::isGoodTrack(int iTrk)
-{
-
-    return true;
-}
 
 bool NA61DataEventNew::isRefMultTrack(int iTrk)
 {
@@ -166,11 +161,11 @@ bool NA61DataEventNew::isRefMultTrack(int iTrk)
 bool NA61DataEventNew::isGoodEvent(Int_t nTPC_Tracks_Ref)
 {
     Float_t fPSD_Energy_Total = fEvent->GetPSDEnergy();
-//     if (fEvent->GetVertexPositionComponent(2) > -584.5 || fEvent->GetVertexPositionComponent(2) < -589) return false;
+    if (fEvent->GetVertexPositionComponent(2) > -584.5 || fEvent->GetVertexPositionComponent(2) < -589) return false;
     if (nTPC_Tracks_Ref < 0) return false;
 //     if (fPSD_Energy_Total < 1200 || fPSD_Energy_Total > 6000) return false;   //TODO check
-//     if (fEvent->GetTrigger(7)->GetSignal() != 1) return false;
-//     if (fPSD_Energy_Total  < 4500 - nTPC_Tracks_Ref*(4500.-1200.)/180.) return false;  //TODO check
+    if (fEvent->GetTrigger(7)->GetSignal() != 1) return false;
+    if (fPSD_Energy_Total  < 4500 - nTPC_Tracks_Ref*(4500.-1200.)/180.) return false;  //TODO check
     return true;
 }
 

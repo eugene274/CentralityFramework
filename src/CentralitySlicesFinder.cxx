@@ -46,7 +46,6 @@ CentralitySlicesFinder::CentralitySlicesFinder()
     fDet1Name (""),
     fDet2Name (""),
     fCuts(""),
-    fBaseCuts(""),
     fCentralityMax(100),
     fPrecision(0.01),
     fDirectionCentralEvents (1),
@@ -93,12 +92,16 @@ void CentralitySlicesFinder::WriteOutputData ()
 void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
 {
 
+    fDet1Id = Det1Id;
+    fDet2Id = Det2Id;
+    
     CentralityContainerNormalizer *fCCNorm = new CentralityContainerNormalizer;
 
     fCCNorm->SetDet1Name (fDet1Name) ;  
     fCCNorm->SetDet2Name (fDet2Name) ;  
     fCCNorm->SetInFileName (fInFileName) ;     
     fCCNorm->Do1DAnalisys (is1DAnalisys) ;
+    fCCNorm->IsSimData (fIsSimData) ;
     fCCNorm->Det1IsInt (isDet1Int) ;
     fCCNorm->Det2IsInt (isDet2Int) ;
     fCCNorm->SetDir (CFdir) ;
@@ -108,7 +111,6 @@ void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     fNormTree->SetBranchAddress("det1", &det1);
     if (Det2Id != -1) fNormTree->SetBranchAddress("det2", &det2);
     if (fIsSimData)   fNormTree->SetBranchAddress("B", &fB);
-
     
     fDet1NormVec    = fCCNorm->GetDet1NormVec    () ;
     fDet2NormVec    = fCCNorm->GetDet2NormVec    () ;
@@ -116,87 +118,17 @@ void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     nEventsInRunVec = fCCNorm->GetEventsInRun1Vec () ; //TODO
     det1max = fCCNorm->GetDet1Max ();
     det2max = fCCNorm->GetDet2Max ();
-    
-    std::vector <Float_t> TempVec;
-    for (Int_t j=0; j<fRunIdVec.size(); j++)
-        TempVec.push_back(fRunIdVec.at(j));
-
-    TGraph *gr1 = new TGraph (Int_t(fRunIdVec.size()), &(TempVec[0]), &(fDet1NormVec[0]) );
-    gr1->SetMarkerStyle(23);    
-    gr1->GetXaxis()->SetTitle( "Run" );
-    gr1->GetYaxis()->SetTitle("<M_{TPC}>");    
-    gr1->Draw("APL");
-
-    if (Det2Id != -1){ 
-        TGraph *gr2 = new TGraph (Int_t(fRunIdVec.size()), &(TempVec[0]), &(fDet2NormVec[0]) );
-        gr2->SetMarkerStyle(23);    
-        gr2->SetMarkerColor(kRed);    
-        gr2->SetLineColor(kRed);    
-        gr2->Draw("PLsame");
-    
-        TLegend* leg1 = new TLegend(0.7,0.75,0.89,0.89);
-        leg1->AddEntry(gr1, fDet1Name, "p");    
-        leg1->AddEntry(gr2, fDet2Name, "p");    
-        leg1->Draw("same");
-    
-    
-    }
-    
 }
 
-
-void CentralitySlicesFinder::GetNormalization (Int_t Det1Id, Int_t Det2Id)
-{
-}
-
-void CentralitySlicesFinder::GetNormalization (Int_t Det1Id)
-{
-}
 
 void CentralitySlicesFinder::Fit2DCorrelation ()
 {
     std::cout << "Fitting 2D Correlation..." << std::endl;
-//     TH2F *h2D = new TH2F ("h2D", "det12", 100, 0., 1., 100, 0., 1.);
-    TProfile *p2D;
-//     TString DrawPar = distrName + " >> h1(100, 0., 1., 100, 0., 1.)";
-    fNormTree->Draw( "det2 : det1  >> h1(120, 0., 1.2, 120, 0., 1.2)", fCuts, "colz");
-    
-    TH2F *h2D = (TH2F*)gPad->GetPrimitive("h1");
-//     h2D->SetMaximum(40);
-    h2D->SetTitle ("2D correlation fit");
-    h2D->GetXaxis()->SetTitle( Form ( "%s/%s_{max}", fDet1Name.Data(), fDet1Name.Data() ) );
-    h2D->GetYaxis()->SetTitle( Form ( "%s/%s_{max}", fDet2Name.Data(), fDet2Name.Data() ) );   
-
-//     DrawPar = distrName + " >> prof (100, 0., 1., 100, 0., 1.)";
-    
-    fNormTree->Draw("det2 : det1 >> prof (100, 0., 1., 100, 0., 1.)", fCuts, "sameprof");
-    
-    p2D = (TProfile*)gPad->GetPrimitive("prof");
-//     p2D->SetLabelSize(10);
-//     p2D->SetBarWidth(10);
-//     p2D->SetLineColor(1);    
-//     p2D->SetLineWidth(3);
-//     p2D->Draw("same");
-//     gPad->Update();
-
-//     c1->Print( CFdir + "QA/profile.pdf");    
-//     c1->Print( CFdir + "QA/profile.root");    
-
-
-
+    fNormTree->Draw( "det2 : det1  >> h1(120, 0., 1.2, 120, 0., 1.2)", fCuts, "colz");    
+    fNormTree->Draw("det2 : det1 >> prof (100, 0., 1., 100, 0., 1.)", fCuts, "sameprof");    
+    TProfile *p2D = (TProfile*)gPad->GetPrimitive("prof");
     p2D->Fit("pol3", "", "", 0.0, 1.0);
-    gPad->Update();
-
-//     c1->Print( CFdir + "QA/profile_fit.pdf");    
-//     c1->Print( CFdir + "QA/profile_fit.root");    
-
-    fFitFunction = (TF1*) p2D->GetFunction("pol3");
-    
-//     TLegend* leg1 = new TLegend(0.7,0.75,0.89,0.89);
-//     leg1->AddEntry(fFitFunction ,"start fit","l");    
-//     leg1->Draw("same");
-    
-    gPad->Update();
+    fFitFunction = (TF1*) p2D->GetFunction("pol3");    
     std::cout << "Fitting done!" << std::endl;
 }
 
@@ -204,9 +136,9 @@ void CentralitySlicesFinder::FitCorrection ( int n_points )
 {
 //     TCanvas *c1 = new TCanvas("c1", "canvas", 1000, 600);
     std::cout << "Starting fit correction..." << std::endl;
+
     std::vector <double> X4fit;
     std::vector <double> Y4fit;
-    
     std::vector <double> ErrorX;
     std::vector <double> ErrorY;
     
@@ -292,32 +224,11 @@ void CentralitySlicesFinder::FitCorrection ( int n_points )
 //     for (int i=0; i<X4fit.size(); i++ )
 //         cout << "x = " << X4fit.at(i) << "       y = " << Y4fit.at(i) << endl;
     
-    TGraphErrors *gr = new TGraphErrors( X4fit.size(), &(X4fit[0]), &(Y4fit[0]), &(ErrorX[0]), &(ErrorY[0]));
-    gr->GetXaxis()->SetLimits(0.0, 1.0);
-    gr->GetYaxis()->SetRangeUser(0.0, 1.0);
-    gr->SetMarkerStyle(22);  
-    gr->SetMarkerSize(1);
-    gr->SetMarkerColor(1);
-    gr->Draw("Psame");
-    
-//     c1->Print( CFdir + "QA/corr.pdf");    
-//     c1->Print( CFdir + "QA/corr.root");    
-    
-    
-    
-    
-    
-    gr->Fit("pol5", "", "", 0.00, 1.0);
-    gr->GetFunction("pol5")->SetLineWidth(2);
-    gr->GetFunction("pol5")->SetLineColor(1);
-    fFitFunction = (TF1*) gr->GetFunction("pol5");
-    
-/*    TLegend* leg1 = new TLegend(0.6,0.8,0.75,0.89);
-    leg1->AddEntry(fFitFunction ,"corrected fit","l");    
-    leg1->Draw("same");  */  
-
-//     c1->Print( CFdir + "QA/fit.pdf");    
-//     c1->Print( CFdir + "QA/fit.root");    
+    fCorrProfile = new TGraphErrors( X4fit.size(), &(X4fit[0]), &(Y4fit[0]), &(ErrorX[0]), &(ErrorY[0]));
+    fCorrProfile->Fit("pol5", "", "", 0.00, 1.0);
+    fCorrProfile->GetFunction("pol5")->SetLineWidth(2);
+    fCorrProfile->GetFunction("pol5")->SetLineColor(1);
+    fFitFunction = (TF1*) fCorrProfile->GetFunction("pol5");
     
     std::cout << "Fit correction done!" << std::endl;
 }
@@ -330,9 +241,7 @@ void CentralitySlicesFinder::FindCentralitySlices ( )
     fSlice->ClearData ();
     
     nIntervals = Int_t (100/fSliceStep);
-    
-    fCuts = fBaseCuts;
-    
+        
     TString distrName;
     if (!is1DAnalisys)  distrName = Form("%s_%s_centrality_QA", fDet1Name.Data(), fDet2Name.Data() );
     else                distrName = Form("%s_centrality_QA", fDet1Name.Data() );
@@ -352,8 +261,8 @@ void CentralitySlicesFinder::FindCentralitySlices ( )
 
     /*if (!is1DAnalisys)  */FindMeanSignalsInSlice();
     
-    c1->Print( CFdir + "QA/" + distrName + ".pdf");    
-    c1->Print( CFdir + "QA/" + distrName + ".root");    
+//     c1->Print( CFdir + "QA/" + distrName + ".pdf");    
+//     c1->Print( CFdir + "QA/" + distrName + ".root");    
     
     
 //     fSlicesFile = new TFile ( Form(CFdir + "root_files/Slices_%s_%s_%d.root", fDet1Name.Data(), fDet2Name.Data(), RunId ) , "RECREATE");
@@ -462,24 +371,6 @@ void CentralitySlicesFinder::FindSlices ( )
 //         std::cout << " B  = " << fSlice->GetBi(i) << endl; 
 //         std::cout << " A = " << fSlice->GetAi(i) << endl; 
 
-        
-        double xNormInterval = 0.15 * TMath::Abs ( TMath::Cos (TMath::ATan (kb[0]) ) );
-        if (is1DAnalisys)  xNormInterval = 0.15 / 1e5 ;
-                                                            
-        if (!is1DAnalisys){
-            TF1 *norm = new TF1("norm","[0]*x + [1]", x-xNormInterval, x+xNormInterval); 
-            norm->SetParameters (kb[0], kb[1]);
-            norm->Draw("same");  
-        }
-        else{
-            gPad->Update();
-            
-            Double_t xr = gPad->GetX2()-gPad->GetX1();
-            double x1 = (x-gPad->GetX1())/ xr;
-            TLine l2;
-            l2.SetLineColor(kRed);
-            l2.DrawLineNDC(x1,0.15,x1,0.9);             
-        } 
     }
     std::cout << "Slicing done!" << std::endl;
 }
@@ -548,68 +439,121 @@ void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
         
         int nInside = insideList->GetN();
         
-        std::vector <double> X(nInside);
-        std::vector <double> Y(nInside);    
-        std::vector <double> XY(nInside);                   
-        std::vector <double> B(nInside);
+//         std::vector <double> X(nInside);
+//         std::vector <double> Y(nInside);    
+//         std::vector <double> XY(nInside);                   
+//         std::vector <double> B(nInside);
 
+        TH1F *hX  = new TH1F ("hX",  "hX",  100, 0, 1);
+        TH1F *hY  = new TH1F ("hY",  "hY",  100, 0, 1);
+        TH1F *hXY = new TH1F ("hXY", "hXY", 100, -0.5, 0.5);
+        TH1F *hB  = new TH1F ("hB",  "hB",  200, 0, 20);
+        
         double meanB = 0, meanParX = 0, meanParY = 0, meanParXY = 0;
-        int nn = 0;
+        double sigmaB = 0, sigmaParX = 0, sigmaParY = 0, sigmaParXY = 0, meanParXY3 = 0, dsigmaB = 0, dB = 0;
+        
+//         int nn = 0;
         
         for (int k=0; k<nInside; k++)
         {
             fNormTree->GetEntry(insideList->GetEntry(k));
 
-            X.at(k) = det1;
-            Y.at(k) = det2;
-            B.at(k) = fB; 
-
+//             X.at(k) = det1;
+//             Y.at(k) = det2;
+//             B.at(k) = fB; 
+//             XY.at(k) = ( X.at(k)*tempk - Y.at(k) + tempb) / TMath::Sqrt( 1 + tempk*tempk);  
 //         std::cout << "fill b = " << fB << std::endl;
 
-            
-            XY.at(k) = ( X.at(k)*tempk - Y.at(k) + tempb) / TMath::Sqrt( 1 + tempk*tempk);  
+            hB->Fill(fB);
+            hX->Fill(det1);
+            if (!is1DAnalisys)  hY->Fill(det2);
+            if (!is1DAnalisys)  hXY->Fill(( det1*tempk - det2 + tempb) / TMath::Sqrt( 1 + tempk*tempk));
 
-            meanB     += B.at(k);
-            meanParX  += X.at(k);
-            meanParY  += Y.at(k);
-            meanParXY += XY.at(k); 
-            nn++;
+//             meanB     += B.at(k);
+//             meanParX  += X.at(k);
+//             meanParY  += Y.at(k);
+//             meanParXY += XY.at(k); 
+//             nn++;
             
         }
+        
+//         TCanvas *cTemp = new TCanvas ("cTemp", "cTemp", 800, 600);
+//         cTemp->Divide(2,2);
+        
+//         cTemp->cd(1);
+//         hB->Draw();
+        
+//         cTemp->cd(2);
+//         hX->Draw();
+
+//         cTemp->cd(3);
+//         hY->Draw();
+
+//         cTemp->cd(4);
+//         hXY->Draw();
+        hB->Fit("gaus");
+        hX->Fit("gaus");
+        if (!is1DAnalisys)  hY->Fit("gaus");
+        if (!is1DAnalisys)  hXY->Fit("gaus");
+        
+//         gPad->Update();
+        
+//         std::cin >> meanB;
+        TF1 *fYfit;
+        TF1 *fBfit = hB->GetFunction("gaus");
+        TF1 *fXfit = hX->GetFunction("gaus");
+        if (!is1DAnalisys)   fYfit = hY->GetFunction("gaus");
+
+        meanB    = fBfit->GetParameter(1);      sigmaB    = fBfit->GetParameter(2);
+        meanParX = fXfit->GetParameter(1);      sigmaParX = fXfit->GetParameter(2);
+        if (!is1DAnalisys)   { meanParY = fYfit->GetParameter(1);      sigmaParY = fYfit->GetParameter(2); }
+        
+        dsigmaB = fBfit->GetParError(2);
+        dB = fBfit->GetParError(1);
+        
+//         cout << fBfit->GetParameter(0) << endl;
+//         cout << fBfit->GetParameter(1) << endl;        
+//         cout << fBfit->GetParameter(2) << endl;        
+        
+                
         cout << "   Events inside slice = " << nInside << endl;
        
-        if (nn > 0){
-            meanB     /= nn;
-            meanParX  /= nn;
-            meanParY  /= nn;
-            meanParXY /= nn;        
-        }
-        else continue;
+//         if (nn > 0){
+//             meanB     /= nn;
+//             meanParX  /= nn;
+//             meanParY  /= nn;
+//             meanParXY /= nn;        
+//         }
+//         else continue;
         
-        double sigmaB = 0, sigmaParX = 0, sigmaParY = 0, sigmaParXY = 0, meanParXY3 = 0;
         
-        for (int k=0; k<nInside; k++)
-        {
-            sigmaB     += TMath::Power(B.at(k) - meanB, 2);
-            sigmaParX  += TMath::Power(X.at(k) - meanParX, 2);
-            sigmaParY  += TMath::Power(Y.at(k) - meanParY, 2);
-            sigmaParXY += TMath::Power(XY.at(k) - meanParXY, 2);
-            meanParXY3 += TMath::Power(XY.at(k) - meanParXY, 3);
-            
-        }
+//         for (int k=0; k<nInside; k++)
+//         {
+//             sigmaB     += TMath::Power(B.at(k) - meanB, 2);
+//             sigmaParX  += TMath::Power(X.at(k) - meanParX, 2);
+//             sigmaParY  += TMath::Power(Y.at(k) - meanParY, 2);
+//             sigmaParXY += TMath::Power(XY.at(k) - meanParXY, 2);
+//             meanParXY3 += TMath::Power(XY.at(k) - meanParXY, 3);
+//             
+//         }
 
-        sigmaB = TMath::Power(sigmaB/nn, 0.5);
-        sigmaParX = TMath::Power(sigmaParX/nn, 0.5);
-        sigmaParY = TMath::Power(sigmaParY/nn, 0.5);
-        sigmaParXY = TMath::Power(sigmaParXY/nn, 0.5);
-        meanParXY3 = meanParXY3/nn/TMath::Power(sigmaParXY, 3);
+//         sigmaB = TMath::Power(sigmaB/nn, 0.5);
+//         sigmaParX = TMath::Power(sigmaParX/nn, 0.5);
+//         sigmaParY = TMath::Power(sigmaParY/nn, 0.5);
+//         sigmaParXY = TMath::Power(sigmaParXY/nn, 0.5);
+//         meanParXY3 = meanParXY3/nn/TMath::Power(sigmaParXY, 3);
 
         
         fSlice->AddXPar (meanParX, sigmaParX);
         fSlice->AddYPar (meanParY, sigmaParY);
         fSlice->AddXYPar (meanParXY, sigmaParXY);
         fSlice->AddXY3 (meanParXY3);
-        fSlice->AddB (meanB, sigmaB);
+        fSlice->AddB (meanB, sigmaB, dB, dsigmaB);
+        
+        hX  ->Delete();
+        hY  ->Delete();
+        hXY ->Delete();
+        hB  ->Delete();
     }
     std::cout << "Mean parameters calculated!" << std::endl;
     
@@ -663,70 +607,193 @@ void CentralitySlicesFinder::QA ()
     TCanvas *c1 = new TCanvas("c1", "canvas", 1500, 900);
     c1->Divide (2, 2);
 
+
+
+// ***************************** Run-by-run QA *****************************
+    c1->cd(1);
+    std::vector <Float_t> TempVec;
+    for (UInt_t j=0; j<fRunIdVec.size(); j++)
+        TempVec.push_back(fRunIdVec.at(j));
+
+    TGraph *gr1 = new TGraph (Int_t(fRunIdVec.size()), &(TempVec[0]), &(fDet1NormVec[0]) );
+    gr1->SetMarkerStyle(23);    
+    gr1->GetXaxis()->SetTitle( "Run" );
+    gr1->GetYaxis()->SetTitle(  Form ( "%s^{run}/<%s>", fDet1Name.Data(), fDet1Name.Data() ) );    
+    gr1->GetYaxis()->SetRangeUser(0.9, 1.1);
+ 
+    gr1->Draw("APL");
+
+    if (fDet2Id != -1){ 
+        TGraph *gr2 = new TGraph (Int_t(fRunIdVec.size()), &(TempVec[0]), &(fDet2NormVec[0]) );
+        gr1->GetYaxis()->SetTitle(  Form ( "signal^{run}/<signal>" ) );    
+        
+        gr2->SetMarkerStyle(23);    
+        gr2->SetMarkerColor(kRed);    
+        gr2->SetLineColor(kRed);    
+        gr2->Draw("PLsame");
+    
+        TLegend* leg1 = new TLegend(0.7,0.75,0.89,0.89);
+        leg1->AddEntry(gr1, fDet1Name, "p");    
+        leg1->AddEntry(gr2, fDet2Name, "p");    
+        leg1->Draw("same");
+    }    
+// **************************************************************************
+    
+// ******************************* Slices QA ********************************
+    c1->cd(2);    
     std::vector <Float_t> centrality;
     Float_t step = fSlice->GetSlicesStep ();
     UInt_t NSlices = fSlice->GetNSlices();
     
     for (UInt_t i=0; i<NSlices; i++)
         centrality.push_back( (i+0.5)*step );
-        
-    c1->cd(1);
-    
-    fNormTree->Draw( "det2 : det1  >> h1(120, 0., 1.2, 120, 0., 1.2)", fCuts, "colz");
-//     TH2F *h1 = (TH2F*)gPad->GetPrimitive("h1");
-    fFitFunction->Draw("same");
-
-    for (UInt_t i=0; i<NSlices; i++)
+            
+    if (!is1DAnalisys)
     {
+        fNormTree->Draw( "det2 : det1  >> h1(1200, 0., 1.2, 1200, 0., 1.2)", fCuts, "colz");
+        TH2F *h1 = (TH2F*)gPad->GetPrimitive("h1");
+        
+        fFitFunction->SetLineColor(kRed);
+
+        h1->SetTitle ("2D correlation");
+        h1->GetXaxis()->SetTitle( Form ( "%s/%s_{max}", fDet1Name.Data(), fDet1Name.Data() ) );
+        h1->GetYaxis()->SetTitle( Form ( "%s/%s_{max}", fDet2Name.Data(), fDet2Name.Data() ) );   
+
+        fNormTree->Draw("det2 : det1 >> prof (100, 0., 1., 100, 0., 1.)", fCuts, "sameprof");
+        TProfile *p2D = (TProfile*)gPad->GetPrimitive("prof");
+        p2D->SetMarkerStyle(23);  
+        p2D->SetMarkerSize(1);
+        p2D->SetLineColor(1);    
+
+        for (UInt_t i=0; i<NSlices; i++)
+        {
             Float_t x = fSlice->GetXi(i);
             Float_t xNormInterval = 0.15 * TMath::Abs ( TMath::Cos (TMath::ATan (fSlice->GetBi(i)) ) );
             TF1 *norm = new TF1("norm","[0]*x + [1]", x-xNormInterval, x+xNormInterval); 
             norm->SetParameters (fSlice->GetBi(i), fSlice->GetAi(i));
-            norm->Draw("same");  
+            norm->Draw("same"); 
+        }
+
+        fCorrProfile->SetMarkerStyle(22);  
+        fCorrProfile->SetMarkerSize(1);
+        fCorrProfile->SetMarkerColor(kRed);
+    
+        TLegend* leg1 = new TLegend(0.6,0.6,0.9,0.9);
+        leg1->AddEntry(p2D,          "profile", "p");            
+        leg1->AddEntry(fCorrProfile, "corrected profile", "p");    
+        leg1->AddEntry(fFitFunction, "corrected fit", "l");            
+    
+        fFitFunction->Draw("same");
+        p2D->Draw("same");
+        fCorrProfile->Draw("Psame");
+        leg1->Draw("same");    
+        gPad->Update();
+        
     }
-    
-    c1->cd(2);
-    
-    TGraphErrors *grX = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanX()[0]), 0, &(fSlice->GetSigmaX()[0]));
-    grX->SetTitle ("2D fit: X, Y vs centrality");
-    grX->SetMarkerStyle(23);    
-    grX->GetXaxis()->SetTitle( "Centrality, %" );
-    grX->GetYaxis()->SetTitle("X, Y");    
-
-    grX->GetXaxis()->SetLimits(0.0, NSlices*step);
-    grX->GetYaxis()->SetRangeUser(0.0, 1);
-    grX->Draw("APL");
-
-    TGraphErrors *grY = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanY()[0]), 0, &(fSlice->GetSigmaY()[0]));
-    grY->SetMarkerStyle(22);    
-    grY->SetMarkerColor(3);    
-    grY->Draw("PLsame");
-
+    else
+    {
+        fNormTree->Draw( "det1  >> h1(120, 0., 1.2)", fCuts);
+        TH1F *h1 = (TH1F*)gPad->GetPrimitive("h1");
+        h1->GetXaxis()->SetTitle( Form ("<%s>/%s^{max}", fDet1Name.Data(), fDet1Name.Data()) );
+        h1->GetYaxis()->SetTitle( "Counts" );    
+        gPad->SetLogy();
+        
+        for (UInt_t i=0; i<NSlices; i++)
+        {
+            gPad->Update();
+            Float_t x = fSlice->GetXi(i);
+            Double_t xr = gPad->GetX2()-gPad->GetX1();
+            double x1 = (x-gPad->GetX1()) / xr;
+            TLine l2;
+            l2.SetLineColor(kRed);
+            l2.DrawLineNDC(x1, 0.10, x1, 0.9);             
+        }
+    }
+// **************************************************************************
 
     c1->cd(3);
+    TGraphErrors *grX = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanX()[0]), 0, &(fSlice->GetSigmaX()[0]));
+    grX->SetTitle ("X, Y vs centrality");
+    grX->SetMarkerStyle(23);    
+    grX->GetXaxis()->SetTitle( "Centrality, %" );
+    grX->GetYaxis()->SetTitle( Form ("<%s>/%s^{max}", fDet1Name.Data(), fDet1Name.Data()) );    
+
+    grX->GetXaxis()->SetLimits(0.0, NSlices*step);
+    grX->GetYaxis()->SetRangeUser(0.0, 1.0);
+    grX->Draw("APL");
+
+    TGraphErrors *grY;
+    if (!is1DAnalisys)
+    {
+        grY = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanY()[0]), 0, &(fSlice->GetSigmaY()[0]));
+        grY->SetMarkerStyle(22);    
+        grY->SetMarkerColor(kRed);    
+        grY->SetLineColor(kRed);    
+        grY->Draw("PLsame");
+
+        grX->GetYaxis()->SetTitle( "<Signal>/Signal_{max}" );    
+        
+        TLegend* leg2 = new TLegend(0.7,0.8,0.9,0.9);
+        leg2->AddEntry(grX, fDet1Name.Data(), "p");            
+        leg2->AddEntry(grY, fDet2Name.Data(), "p");    
+        leg2->Draw("same");     
+    }
     
-    TGraphErrors *grXY = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanXY()[0]), 0, &(fSlice->GetSigmaXY()[0]));
-    grXY->SetTitle ("2D fit: XY vs centrality");
-    grXY->SetMarkerStyle(23);    
-    grXY->GetXaxis()->SetTitle( "Centrality, %" );
-    grXY->GetYaxis()->SetTitle("XY");    
-    grXY->GetXaxis()->SetLimits(0.0, NSlices*step);
-    grXY->GetYaxis()->SetRangeUser(-0.2, 0.2);
-    grXY->Draw("APL");
+    
     
     c1->cd(4);
+    gPad->SetLogy();
+    std::vector <Float_t> TempVecB, TempdB;
+    for (UInt_t j=0; j<NSlices; j++){
+        
+        float temp_dB = fSlice->GetdB().at(j);
+        float temp_B = fSlice->GetMeanB().at(j);
+        float temp_sB = fSlice->GetSigmaB().at(j);
+        float temp_dsB = fSlice->GetdSigmaB().at(j);
+        
+        TempVecB.push_back(temp_sB/temp_B);
+        
+        float ddd = TMath::Sqrt ( (temp_dsB/temp_B)*(temp_dsB/temp_B) + (temp_dsB/temp_B/temp_B*temp_dB)*(temp_dsB/temp_B/temp_B*temp_dB) );
+        
+        cout << "d_sigma = " << (temp_dsB/temp_B) << endl;
+        cout << "d_b = " << (temp_dsB/temp_B/temp_B*temp_dB) << endl;
+        
+        TempdB.push_back( ddd );
+    }
+
+    TGraphErrors *grB = new TGraphErrors (NSlices, &(centrality[0]), &(TempVecB[0]), 0, &(TempdB[0]));
+    grB->SetMarkerStyle(23);    
+    grB->GetXaxis()->SetTitle( "Centrality" );
+    grB->GetYaxis()->SetTitle( "sigma_{B}/<B>" );    
+    grB->GetYaxis()->SetRangeUser(0.05, 0.5);
+      
+    grB->Draw("APL");
     
-    TGraphErrors *grXY3 = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanXY3()[0]));
-    grXY3->SetTitle ("2D fit: XY3 vs centrality");
-    grXY3->SetMarkerStyle(23);    
-    grXY3->GetXaxis()->SetTitle( "Centrality, %" );
-    grXY3->GetYaxis()->SetTitle("XY3");    
-    grXY3->GetXaxis()->SetLimits(0.0, NSlices*step);
-    grXY3->GetYaxis()->SetRangeUser(-5, 5);
-    grXY3->Draw("APL");
+//     c1->cd(3);
+//     
+//     TGraphErrors *grXY = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanXY()[0]), 0, &(fSlice->GetSigmaXY()[0]));
+//     grXY->SetTitle ("2D fit: XY vs centrality");
+//     grXY->SetMarkerStyle(23);    
+//     grXY->GetXaxis()->SetTitle( "Centrality, %" );
+//     grXY->GetYaxis()->SetTitle("XY");    
+//     grXY->GetXaxis()->SetLimits(0.0, NSlices*step);
+//     grXY->GetYaxis()->SetRangeUser(-0.2, 0.2);
+//     grXY->Draw("APL");
     
+//     c1->cd(4);
     
-    c1->Print( CFdir + "QA/testQA.pdf");    
+//     TGraphErrors *grXY3 = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanXY3()[0]));
+//     grXY3->SetTitle ("2D fit: XY3 vs centrality");
+//     grXY3->SetMarkerStyle(23);    
+//     grXY3->GetXaxis()->SetTitle( "Centrality, %" );
+//     grXY3->GetYaxis()->SetTitle("XY3");    
+//     grXY3->GetXaxis()->SetLimits(0.0, NSlices*step);
+//     grXY3->GetYaxis()->SetRangeUser(-5, 5);
+//     grXY3->Draw("APL");
+    
+    TString filename = Form(CFdir + "QA/QA_%s_%s", fDet1Name.Data(), fDet2Name.Data() );
+    c1->Print( filename + ".pdf" );    
+    c1->Print( filename + ".root" );    
     
     std::cout << "QA saved!" << std::endl;
 //     TGraph g(a.size(), &(a[0]), &(b[0]));

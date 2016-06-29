@@ -6,6 +6,10 @@
 
 #include "TCanvas.h"
 #include "TRandom.h"
+#include "TMath.h"
+#include "TGraphErrors.h"
+
+
 
 using std::vector;
 using std::cout;
@@ -106,7 +110,7 @@ Float_t CentralityGetter::GetCentrality (Double_t det1)
     }    
     
     
-    for (UInt_t i=1; i<=NSlices; i++)
+    for (Int_t i=1; i<=NSlices; i++)
     {
 //         cout << "x = " << fSlice->GetXi(i) << endl;
         if ( (det1-fSlice->GetXi(i))*(det1-fSlice->GetXi(i-1)) <= 0 )
@@ -117,8 +121,8 @@ Float_t CentralityGetter::GetCentrality (Double_t det1)
         }
     }
 
-//     if (!isOK)
-//         cout << "*** Warning *** GetCentrality: centrality is not found!" << endl;
+    if (!isOK)
+        cout << "*** Warning *** GetCentrality: centrality is not found!" << endl;
 
     
     return centrality;
@@ -169,7 +173,7 @@ Float_t CentralityGetter::GetCentrality (Double_t det1, Double_t det2)
         return centrality;
     }    
     
-    for (UInt_t i=1; i<NSlices; i++)
+    for (Int_t i=1; i<NSlices; i++)
     {
         
         Float_t xi = (det2-fSlice->GetAi(i))/fSlice->GetBi(i);
@@ -188,4 +192,140 @@ Float_t CentralityGetter::GetCentrality (Double_t det1, Double_t det2)
     
     return centrality;
 }
+
+
+void CentralityGetter::GetGlauberB ()
+{
+    
+    TCanvas *c1 = new TCanvas("c1", "canvas", 1500, 900);
+
+    
+    GlauberParGetter *gg = new GlauberParGetter;
+    gg->SetSimTree ("/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/Glauber/examples/glau_pbpb_ntuple_signn_31.0_7.6AGeV_CM_30AGeV_LC.root");
+    
+    fCentrTree->GetEntry(0);
+    
+    Float_t step = fSlice->GetSlicesStep ();
+    Int_t NSlices = fSlice->GetNSlices();
+    Float_t norm = fSlice->GetDet1Max();  
+
+    std::vector <Float_t> centrality;    
+    for (UInt_t i=0; i<NSlices; i++)
+        centrality.push_back( (i+0.5)*step );
+    
+    std::vector <Float_t> GlaubSigmaB_B;
+    std::vector <Float_t> GlaubSigmaB;
+    std::vector <Float_t> GlaubB;
+    c1->Divide(2,2);
+    
+    
+    TH1F *hTotal = new TH1F ("hTotal", "hTotal", 200, 0, 20);
+    
+    
+    
+    c1->cd(1);
+    gPad->SetLogy();
+    for (Int_t i=0; i<NSlices; i++)
+    {
+        
+        Float_t MultMax = 1e5, MultMin;
+        if (i>0) MultMax = fSlice->GetXi(i-1) * norm;
+        MultMin = fSlice->GetXi(i) * norm;
+        
+        TH1F *h1 = new TH1F ("h1", "", 200, 0, 20);
+        h1->SetName(Form("hB_%f_%f", MultMin, MultMax));
+        h1->SetLineColor(i+1);
+        
+        fSlice->GetXi(i);
+        gg->GetBHisto(MultMin, MultMax, h1, 1e5);
+        
+        h1->GetYaxis()->SetRangeUser(1, 500);
+
+        if (i==0)  h1->Draw();
+        else       h1->Draw("same");
+        
+        h1->Fit("gaus", "Q");
+        TF1 *fFit = h1->GetFunction("gaus");
+        fFit->SetLineColor(i+1);
+        Float_t meanB = fFit->GetParameter(1); 
+        Float_t sigmaB = fFit->GetParameter(2);        
+        
+        std::cout << "mean = " << meanB << "    sigma = " << sigmaB << "    area = " << h1->Integral() << std::endl;
+        
+        GlaubSigmaB_B.push_back (sigmaB/meanB);
+        GlaubSigmaB.push_back (sigmaB);
+        GlaubB.push_back (meanB);
+        
+        hTotal->Add(h1);
+        
+        gPad->Update();
+    }
+    hTotal->Draw("same");
+    
+    c1->cd(3);
+    
+    gPad->SetLogy();
+    std::vector <Float_t> TempVecB, TempdB;
+    for (UInt_t j=0; j<NSlices; j++){
+        
+        float temp_dB = fSlice->GetdB().at(j);
+        float temp_B = fSlice->GetMeanB().at(j);
+        float temp_sB = fSlice->GetSigmaB().at(j);
+        float temp_dsB = fSlice->GetdSigmaB().at(j);
+        
+        TempVecB.push_back(temp_sB/temp_B);
+        
+        float ddd = TMath::Sqrt ( (temp_dsB/temp_B)*(temp_dsB/temp_B) + (temp_dsB/temp_B/temp_B*temp_dB)*(temp_dsB/temp_B/temp_B*temp_dB) );
+        
+//         cout << "d_sigma = " << (temp_dsB/temp_B) << endl;
+//         cout << "d_b = " << (temp_dsB/temp_B/temp_B*temp_dB) << endl;
+        
+        TempdB.push_back( ddd );
+    }
+
+    TGraphErrors *grSigmaB = new TGraphErrors (NSlices, &(centrality[0]), &(TempVecB[0]), 0, &(TempdB[0]));
+    grSigmaB->SetMarkerStyle(23);    
+    grSigmaB->GetXaxis()->SetTitle( "Centrality" );
+    grSigmaB->GetYaxis()->SetTitle( "sigma_{B}/<B>" );    
+    grSigmaB->GetYaxis()->SetRangeUser(0.01, 0.5);
+      
+    grSigmaB->Draw("APL");
+
+    TGraphErrors *grSigmaB1 = new TGraphErrors (NSlices, &(centrality[0]), &(GlaubSigmaB_B[0]), 0, 0);
+    grSigmaB1->SetMarkerStyle(22);    
+    grSigmaB1->SetMarkerColor(kRed);    
+    grSigmaB1->SetLineColor(kRed);    
+
+    grSigmaB1->Draw("PLsame");
+
+
+    c1->cd(4);
+    
+    TGraphErrors *grB = new TGraphErrors (NSlices, &(centrality[0]), &(fSlice->GetMeanB()[0]), 0, &(fSlice->GetSigmaB()[0]));
+    grB->SetMarkerStyle(23);    
+    grB->GetXaxis()->SetTitle( "Centrality" );
+    grB->GetYaxis()->SetTitle( "<B>" );    
+    grB->GetYaxis()->SetRangeUser(0.0, 16.0);
+      
+    grB->Draw("APL");
+
+    TGraphErrors *grB1 = new TGraphErrors (NSlices, &(centrality[0]), &(GlaubB[0]), 0, &(GlaubSigmaB[0]));
+    grB1->SetMarkerStyle(22);    
+    grB1->SetMarkerColor(kRed);    
+    grB1->SetLineColor(kRed);    
+
+    grB1->Draw("PLsame");
+    
+
+
+    
+    
+
+    
+}
+
+
+
+
+
 

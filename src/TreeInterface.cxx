@@ -67,15 +67,15 @@ void TreeInterface::Test ()
         fOutTree->Fill();
 
 
-        for (Int_t i=0; i<psd1.size(); i++)
+        for (UInt_t i=0; i<psd1.size(); i++)
             std::cout << psd1.at(i) << ", ";
         std::cout << std::endl;
 
-        for (Int_t i=0; i<psd2.size(); i++)
+        for (UInt_t i=0; i<psd2.size(); i++)
             std::cout << psd2.at(i) << ", ";
         std::cout << std::endl;
 
-        for (Int_t i=0; i<psd3.size(); i++)
+        for (UInt_t i=0; i<psd3.size(); i++)
             std::cout << psd3.at(i) << ", ";
         std::cout << std::endl;
 
@@ -113,7 +113,7 @@ std::vector <Float_t> TreeInterface::SetPsdVector(Int_t subgroup)
         else if ( subgroup == 3 )
             PsdPos = {1,2,3,4,5,6,7,8,13,14,15,16,21,22,23,24,29,30,31,32,37,38,39,40,41,42,43,44};            
  
-        for (Int_t i=0; i<PsdPos.size(); i++)
+        for (UInt_t i=0; i<PsdPos.size(); i++)
         {
             PdsMod = fEvent->GetPSDModule(PsdPos.at(i)-1);
             Float_t edep = 0;

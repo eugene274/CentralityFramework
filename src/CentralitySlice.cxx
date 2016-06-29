@@ -30,6 +30,8 @@ void CentralitySlice::ClearData()
     SigmaY.clear();
     SigmaXY.clear();
     SigmaB.clear();
+    dB.clear();
+    dSigmaB.clear();
     MeanXY3.clear();
 
     
