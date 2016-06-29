@@ -4,7 +4,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class GlauberFitter+;
 #pragma link C++ class CentralityDetectorEvent+;
 #pragma link C++ class CentralityEventContainer+;
 #pragma link C++ class CentralityGetter+;
@@ -18,7 +17,8 @@
 #pragma link C++ class AliGlauberMC+;
 #pragma link C++ class AliGlauberNucleon+;
 #pragma link C++ class AliGlauberNucleus+;
-
+#pragma link C++ class GlauberFitter+;
+#pragma link C++ class GlauberParGetter+;
 
 #pragma link C++ class DataTreeEvent+;
 #pragma link C++ class DataTreeMCTrack+;
