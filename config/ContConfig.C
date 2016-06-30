@@ -6,3 +6,9 @@ Int_t ContConfig(DataTreeEvent* event)
     
     return RefMult;
 }
+
+
+Bool_t isSelectedEvent(DataTreeEvent* event)
+{
+    return true;
+}
