@@ -1,16 +1,16 @@
-#include "DataTreeTrack.h"
+#include "DataTreeSTSTrack.h"
 #include <iostream>
 #include <vector>
 #include "TObject.h"
 
-DataTreeTrack::DataTreeTrack(int idx) : TObject()
+DataTreeSTSTrack::DataTreeSTSTrack(int idx) : TObject()
 {
     SetId(idx);
 }
-DataTreeTrack::~DataTreeTrack()
+DataTreeSTSTrack::~DataTreeSTSTrack()
 {
     
 }
 
-ClassImp(DataTreeTrack)
+ClassImp(DataTreeSTSTrack)
 

@@ -16,19 +16,27 @@ public:
     
     int GetId(){return id;}
     
+    double GetPx(){return px;}
+    double GetPy(){return py;}
+    double GetPz(){return pz;}
+    double GetP(){return p;}
     double GetPt(){return pT;}
     double GetPhi(){return phi;}
     double GetEta(){return eta;}
     int GetPdgId(){return PdgId;}
-    int GetMass(){return Mass;}
+    double GetMass(){return Mass;}
     double GetChiSq(){return ChiSq;}
 
     int GetTrackId(){return TrackId;}
 
+    void SetPx(double fValue){px = fValue;}
+    void SetPy(double fValue){py = fValue;}
+    void SetPz(double fValue){pz = fValue;}
+    void SetP(double fValue){p = fValue;}
     void SetPt(double fPt){pT = fPt;}
     void SetPhi(double fPhi){phi = fPhi;}
     void SetEta(double fEta){eta = fEta;}
-    void SetPdgId(double fValue){PdgId = fValue;}
+    void SetPdgId(int fValue){PdgId = fValue;}
     void SetMass(double fValue){Mass = fValue;}
     void SetChiSq(double fChiSq){ChiSq = fChiSq;}
     
@@ -44,10 +52,14 @@ private:
     void SetId(int idx){id = idx;}
     
     int id;
+    double px;
+    double py;
+    double pz;
+    double p;
     double pT;			//pT
     double phi;			//phi
     double eta;			//eta
-    double PdgId;		//pdg
+    int PdgId;		//pdg
     double Mass;		//mass
     double ChiSq;		//Chi squared
     

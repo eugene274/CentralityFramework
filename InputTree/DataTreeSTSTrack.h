@@ -1,18 +1,18 @@
-#ifndef DataTreeTrack_H
-#define DataTreeTrack_H 1
+#ifndef DataTreeSTSTrack_H
+#define DataTreeSTSTrack_H 1
 
 #include <vector>
 #include <iostream>
 #include "TClonesArray.h"
 #include "TObject.h"
 
-class DataTreeTrack : public TObject
+class DataTreeSTSTrack : public TObject
 {
     
 public:
   
-    DataTreeTrack(int idx);
-    ~DataTreeTrack();
+    DataTreeSTSTrack(int idx);
+    ~DataTreeSTSTrack();
     
     int GetId(){return id;}
     double GetPt(){return pT;}
@@ -53,7 +53,7 @@ private:
     int MCTrack_id;
     int TOFHit_id;
 
-    ClassDefNV(DataTreeTrack, 1)
+    ClassDefNV(DataTreeSTSTrack, 1)
 };
 
 #endif

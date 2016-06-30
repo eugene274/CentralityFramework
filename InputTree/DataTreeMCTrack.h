@@ -18,12 +18,17 @@ public:
     
     bool GetIfPrimary(){return ifPrimary;}
     
+    double GetPx(){return px;}
+    double GetPy(){return py;}
+    double GetPz(){return pz;}
+    double GetP(){return p;}
     double GetPt(){return pT;}
     double GetPhi(){return phi;}
     double GetEta(){return eta;}
     double GetPdgId(){return PdgId;}
     double GetMass(){return Mass;}
     double GetCharge(){return Charge;}
+    int GetMotherId(){return MotherId;}
     
     double GetTOFPositionComponent(int idx){return TOFPosition[idx];}
     double GetTOFPt(){return TOF_pT;}
@@ -45,9 +50,14 @@ public:
     void SetPt(double fPt){pT = fPt;}
     void SetPhi(double fPhi){phi = fPhi;}
     void SetEta(double fEta){eta = fEta;}
+    void SetPx(double fValue){px = fValue;}
+    void SetPy(double fValue){py = fValue;}
+    void SetPz(double fValue){pz = fValue;}
+    void SetP(double fValue){p = fValue;}
     void SetPdgId(double fValue){PdgId = fValue;}
     void SetCharge(double fValue){Charge = fValue;}
     void SetMass(double fValue){Mass = fValue;}
+    void SetMotherId(int fValue){MotherId = fValue;}
 
     void SetTOFPosition(double fX, double fY, double fZ){TOFPosition[0]=fX; TOFPosition[1]=fY; TOFPosition[2]=fZ;}
     void SetTOFPositionComponent(int idx, double fValue){TOFPosition[idx] = fValue;}
@@ -74,12 +84,18 @@ private:
 
     bool ifPrimary;		//flag if it is a primary particle  
     
+    double px;
+    double py;
+    double pz;
+    double p;
+    
     double pT;			//pT for track in the first hit point
     double phi;			//phi for track in the first hit point
     double eta;			//eta for track in the first hit point
     double PdgId;		//pdg code
     double Mass;		//mass
     double Charge;		//charge
+    int MotherId;		//mother id (-1 == primary)
     
     double TOFPosition[3];	//Position at TOF
     double TOF_pT;		//pT at TOF

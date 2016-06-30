@@ -7,13 +7,14 @@
 #include "TObject.h"
 #include "DataTreeTrack.h"
 #include "DataTreePSDModule.h"
-#include "DataTreeTOFSegment.h"
+#include "DataTreeTOFHit.h"
 #include "DataTreeV0Candidate.h"
 #include "DataTreeMCTrack.h"
 #include "DataTreeTrigger.h"
 #include "DataTreeBPD.h"
 
 const int nV0Types = 3;
+const int V0Pdg[nV0Types] = {3122,-3122,-310};
 
 class DataTreeEvent : public TObject
 {
@@ -35,6 +36,19 @@ public:
 	
 	arrTracks->Clear();
 	nTracks = 0;
+	arrMCTracks->Clear();
+	nMCTracks = 0;
+	arrV0CandidatesTOFpid->Clear();
+	nV0CandidatesTOFpid = 0;
+	arrV0CandidatesMCpid->Clear();
+	nV0CandidatesMCpid = 0;
+	for (int i=0;i<nV0Types;i++)
+	{
+	    nV0SpecificCandidatesTOFpid[i] = 0;
+	    nV0SpecificCandidatesMCpid[i] = 0;
+	}
+	arrTOFHits->Clear();
+	nTOFHits = 0;
 	ProcessFlag = false;
     }
     void Process()
@@ -70,6 +84,8 @@ public:
     double GetPSDEnergy(){Process(); return PSDEnergy;}
     double GetMCPSDEnergy(){Process(); return MCPSDEnergy;}
     double GetMCVertexPositionComponent(int idx){return MCVertexPosition[idx];}
+    const int GetNV0Types(){return nV0Types;}
+    const int GetNV0Pdg(int idx){return V0Pdg[idx];}
     
     void SetRunId(int fValue){RunId = fValue;}
     void SetEventId(int fValue){EventId = fValue;}
@@ -82,31 +98,58 @@ public:
     void SetMCVertexPosition(double fX, double fY, double fZ){MCVertexPosition[0]=fX; MCVertexPosition[1]=fY; MCVertexPosition[2]=fZ;}
     void SetMCVertexPositionComponent(int idx, double fValue){MCVertexPosition[idx] = fValue;}
         
+    void SetNV0SpecificCandidatesTOFpid(int idx, int fValue){ nV0SpecificCandidatesTOFpid[idx] = fValue; }
+    void SetNV0CandidatesTOFpid(int fValue){ nV0CandidatesTOFpid = fValue; }
+    void SetNV0SpecificCandidatesMCpid(int idx, int fValue){ nV0SpecificCandidatesMCpid[idx] = fValue; }
+    void SetNV0CandidatesMCpid(int fValue){ nV0CandidatesMCpid = fValue; }
+    
     int GetNTracks(){return nTracks;}
     DataTreeTrack* GetTrack(int idx){return (DataTreeTrack*)arrTracks->At(idx);}
     DataTreeTrack* GetLastTrack(){return (DataTreeTrack*)arrTracks->At(nTracks-1);}
-    void AddTrack(){TClonesArray &arr = *arrTracks; new(arr[nTracks]) DataTreeTrack(nTracks); nTracks++;}
-
+    void AddTrack(){TClonesArray &arr = *arrTracks; new(arr[nTracks]) DataTreeTrack(nTracks); nTracks++; ClearTrack(nTracks-1);}
+    void ClearTrack(int idx){ GetTrack(idx)->SetUndefinedValues(); }
+    
     int GetNPSDModules(){return nPSDModules;}
     DataTreePSDModule* GetPSDModule(int idx){return (DataTreePSDModule*)arrPSDModules->At(idx);}
     DataTreePSDModule* GetLastPSDModule(){return (DataTreePSDModule*)arrPSDModules->At(nPSDModules-1);}
     void AddPSDModule(){TClonesArray &arr = *arrPSDModules; new(arr[nPSDModules]) DataTreePSDModule(nPSDModules); nPSDModules++;}
     void AddPSDModule(int inSections){TClonesArray &arr = *arrPSDModules; new(arr[nPSDModules]) DataTreePSDModule(nPSDModules,inSections); nPSDModules++;}
     
-    int GetNTOFSegments(){return nTOFSegments;}
-    DataTreeTOFSegment* GetTOFSegment(int idx){return (DataTreeTOFSegment*)arrTOFSegments->At(idx);}
-    DataTreeTOFSegment* GetLastTOFSegment(){return (DataTreeTOFSegment*)arrTOFSegments->At(nTOFSegments-1);}
-    void AddTOFSegment(){TClonesArray &arr = *arrTOFSegments; new(arr[nTOFSegments]) DataTreeTOFSegment(nTOFSegments); nTOFSegments++;}
+    int GetNTOFHits(){return nTOFHits;}
+    DataTreeTOFHit* GetTOFHit(int idx){return (DataTreeTOFHit*)arrTOFHits->At(idx);}
+    DataTreeTOFHit* GetLastTOFHit(){return (DataTreeTOFHit*)arrTOFHits->At(nTOFHits-1);}
+//     void AddTOFHit(){TClonesArray &arr = *arrTOFHits; new(arr[nTOFHits]) DataTreeTOFHit(nTOFHits); nTOFHits++;}
+    DataTreeTOFHit* AddTOFHit()
+    {
+	TClonesArray &arr = *arrTOFHits;
+	new(arr[nTOFHits]) DataTreeTOFHit(nTOFHits);
+	nTOFHits++;
+	return (DataTreeTOFHit*)arrTOFHits->At(nTOFHits-1);
+    }
     
-    int GetNV0Candidates(){return nV0Candidates;}
-    DataTreeV0Candidate* GetV0Candidate(int idx){return (DataTreeV0Candidate*)arrV0Candidates->At(idx);}
-    DataTreeV0Candidate* GetLastV0Candidate(){return (DataTreeV0Candidate*)arrV0Candidates->At(nV0Candidates-1);}
-    void AddV0Candidate(){TClonesArray &arr = *arrV0Candidates; new(arr[nV0Candidates]) DataTreeV0Candidate(nV0Candidates); nV0Candidates++;}
+    int GetNV0SpecificCandidatesTOFpid(int idx){ return nV0SpecificCandidatesTOFpid[idx]; }
+    int GetNV0CandidatesTOFpid(){return nV0CandidatesTOFpid;}
+    DataTreeV0Candidate* GetV0CandidateTOFpid(int idx){return (DataTreeV0Candidate*)arrV0CandidatesTOFpid->At(idx);}
+    DataTreeV0Candidate* GetLastV0CandidateTOFpid(){return (DataTreeV0Candidate*)arrV0CandidatesTOFpid->At(nV0CandidatesTOFpid-1);}
+    DataTreeV0Candidate* AddV0CandidateTOFpid()
+    {
+	TClonesArray &arr = *arrV0CandidatesTOFpid;
+	new(arr[nV0CandidatesTOFpid]) DataTreeV0Candidate(nV0CandidatesTOFpid);
+	nV0CandidatesTOFpid++;
+	return (DataTreeV0Candidate*)arrV0CandidatesTOFpid->At(nV0CandidatesTOFpid-1);
+    }
 
+    int GetNV0SpecificCandidatesMCpid(int idx){ return nV0SpecificCandidatesMCpid[idx]; }
     int GetNV0CandidatesMCpid(){return nV0CandidatesMCpid;}
     DataTreeV0Candidate* GetV0CandidateMCpid(int idx){return (DataTreeV0Candidate*)arrV0CandidatesMCpid->At(idx);}
     DataTreeV0Candidate* GetLastV0CandidateMCpid(){return (DataTreeV0Candidate*)arrV0CandidatesMCpid->At(nV0CandidatesMCpid-1);}
-    void AddV0CandidateMCpid(){TClonesArray &arr = *arrV0CandidatesMCpid; new(arr[nV0CandidatesMCpid]) DataTreeV0Candidate(nV0CandidatesMCpid); nV0CandidatesMCpid++;}
+    DataTreeV0Candidate* AddV0CandidateMCpid()
+    {
+	TClonesArray &arr = *arrV0CandidatesMCpid;
+	new(arr[nV0CandidatesMCpid]) DataTreeV0Candidate(nV0CandidatesMCpid);
+	nV0CandidatesMCpid++;
+	return (DataTreeV0Candidate*)arrV0CandidatesMCpid->At(nV0CandidatesMCpid-1);
+    }
     
     int GetNMCTracks(){return nMCTracks;}
     DataTreeMCTrack* GetMCTrack(int idx){return (DataTreeMCTrack*)arrMCTracks->At(idx);}
@@ -148,12 +191,12 @@ private:
     int nPSDModules;			//number of PSD modules
     TClonesArray* arrPSDModules;	//PSD modules
     
-    int nTOFSegments;			//number of segments in TOF
-    TClonesArray* arrTOFSegments;	//TOF segments
+    int nTOFHits;			//number of segments in TOF
+    TClonesArray* arrTOFHits;	//TOF segments
     
-    int nV0Candidates;				//number of V0 candidates
-    int nV0SpecificCandidates[nV0Types];	//number of V0 candidates of specific type
-    TClonesArray* arrV0Candidates;		//V0 candidates
+    int nV0CandidatesTOFpid;				//number of V0 candidates
+    int nV0SpecificCandidatesTOFpid[nV0Types];	//number of V0 candidates of specific type
+    TClonesArray* arrV0CandidatesTOFpid;		//V0 candidates
     
     int nV0CandidatesMCpid;			//number of V0 candidates with MC PiD
     int nV0SpecificCandidatesMCpid[nV0Types];	//number of V0 candidates wit MC PiD and of specific type

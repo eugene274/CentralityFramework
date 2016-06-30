@@ -24,7 +24,7 @@ private:
     module id
 
   
-    ClassDefNV(DataTreePSDModuleHit, 1)
+    ClassDef(DataTreePSDModuleHit, 1)
 };
 
 #endif

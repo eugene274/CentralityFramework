@@ -10,6 +10,7 @@
 #include "KFMCParticle.h"
 #include "KFParticleMatch.h"
 #include "CbmKFPartEfficiencies.h"
+#include "CbmKFParticleFinder.h"
 
 #include "FairTask.h"
 #include "CbmVertex.h"
@@ -32,6 +33,7 @@
 
 // #include "CbmL1PFFitter.h"
 #include "CbmKFVertex.h"
+#include "CbmTrackMatch.h"
 // #include "L1FieldRegion.h"
 
 #include "DataTreeEvent.h"
@@ -54,6 +56,8 @@ class TH2F;
 class DataTreeMaker : public FairTask
 {
     
+const double SpeedOfLight = 29.9792458;
+
 public:
   
     DataTreeMaker();
@@ -66,22 +70,32 @@ public:
     void SetPSDCoordinatesFileName(TString fileName) { sPSDCoordinatesFileName = fileName; } // File containing PSD module (x, y) coordinates in LAB
     void SetOutputFile(TString filename) { sOutputFileName = filename; }
     void SetInputFile(TString filename) { sInputFileName = filename; }
-    
+    void SetCbmKFParticleFinder_MC(CbmKFParticleFinder* kf) {fCbmKFParticleFinder_MC=kf;}
+    void SetCbmKFParticleFinder_TOF(CbmKFParticleFinder* kf) {fCbmKFParticleFinder_TOF=kf;}
+    void SetGenerator(int fValue){Generator = fValue;}
     
     
 private:
     
     DataTreeEvent* DTEvent;
   
+    CbmKFParticleFinder* fCbmKFParticleFinder_TOF;
+    CbmKFParticleFinder* fCbmKFParticleFinder_MC;
+    
+    int Generator = 0; //0 -- URQMD, 1 -- DCM_QGSM
+    
     int fCurEvent;
 //     CbmMCEventHeader* fHeader;
     CbmVertex* fPrimVtx;
     FairMCEventHeader* fHeader;
     TClonesArray* flistPSDhit;
     TClonesArray* flistPSDdigit;
-    TClonesArray* flistSTSMCtrack;
+    TClonesArray* flistMCtrack;
     TClonesArray* flistSTSRECOtrack;
     TClonesArray* flistSTStrackMATCH;
+    TClonesArray *fGlobalTrackArray; //input reco tracks
+    TClonesArray *fTofHitArray; //input reco tracks
+        
     void OutputTree_Init();
     void DataTreeEvent_Init();
     void PSD_Init();
@@ -89,15 +103,20 @@ private:
     void Read_Event();
     void Read_PSD();
     void Read_STS();
+    void Read_TOF_Hits();
+    void Read_MC_Tracks();
+    void Read_Generated_Tracks();
+    void Read_V0_Candidate(int UseMCpid);
     
     const int nInfinity = 10000000;
     const int nUndefinedValue = -999;
+    static const int nV0Daughters = 2;
     
     static const int nPSD_Modules = 44;
     static const int nTPC_Tracks = 500;
     
     TFile* fTreeFile;
-    TTree* fTreeQA;
+    TTree* fDataTree;
     TChain* fTreeEvents;//temp for bad phi data
     UEvent* uEvent;//temp for bad phi data
     TString sInputFileName;//temp for bad phi data

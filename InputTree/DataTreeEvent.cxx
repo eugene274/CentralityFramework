@@ -4,7 +4,7 @@
 #include "TObject.h"
 #include "DataTreeTrack.h"
 #include "DataTreePSDModule.h"
-#include "DataTreeTOFSegment.h"
+#include "DataTreeTOFHit.h"
 #include "DataTreeV0Candidate.h"
 #include "DataTreeMCTrack.h"
 #include "DataTreeTrigger.h"
@@ -16,10 +16,10 @@ arrTracks (new TClonesArray("DataTreeTrack")),
 nTracks(0),
 arrPSDModules (new TClonesArray("DataTreePSDModule")),
 nPSDModules(0),
-arrTOFSegments (new TClonesArray("DataTreeTOFSegment")),
-nTOFSegments(0),
-arrV0Candidates (new TClonesArray("DataTreeV0Candidate")),
-nV0Candidates(0),
+arrTOFHits (new TClonesArray("DataTreeTOFHit")),
+nTOFHits(0),
+arrV0CandidatesTOFpid (new TClonesArray("DataTreeV0Candidate")),
+nV0CandidatesTOFpid(0),
 arrV0CandidatesMCpid (new TClonesArray("DataTreeV0Candidate")),
 nV0CandidatesMCpid(0),
 arrMCTracks (new TClonesArray("DataTreeMCTrack")),
@@ -35,6 +35,7 @@ DataTreeEvent::~DataTreeEvent()
 {
 
 }
+
 
 ClassImp(DataTreeEvent)
 

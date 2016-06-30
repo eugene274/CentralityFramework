@@ -3,7 +3,9 @@
 #include <vector>
 #include "TObject.h"
 
-DataTreeV0Candidate::DataTreeV0Candidate(int idx) : TObject()
+DataTreeV0Candidate::DataTreeV0Candidate(int idx) : TObject(),
+    arrDaughters (new TClonesArray("DataTreeV0Candidate")),
+    nDaughters(0)
 {
     SetId(idx);
 }

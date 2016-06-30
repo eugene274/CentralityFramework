@@ -1,3 +1,5 @@
+//TODO runid, eventid, vertex, fitter!, match in STS, constants
+
 #include "DataTreeMaker.h"
 #include <iostream>
 #include <fstream>
@@ -12,16 +14,21 @@ using std::ifstream;
 #include "CbmPsdDigi.h"
 #include "CbmMCTrack.h"
 #include "CbmStsTrack.h"
+#include "CbmGlobalTrack.h"
+#include "CbmTofHit.h"
 #include "CbmTrackMatchNew.h"
+// #include "CbmTrackMatch.h"
 
 #include "FairMCEventHeader.h"
 #include "UEvent.h"
+#include "UParticle.h"
 // #include "QdetVector.h"
 // #include "QdetVectorGetter.h"
 
 #include "CbmL1PFFitter.h"
 #include "CbmKFVertex.h"
 #include "L1Field.h"
+#include "KFParticleTopoReconstructor.h"
 
 #include "DataTreeEvent.h"
 #include "DataTreeTrack.h"
@@ -55,9 +62,11 @@ InitStatus DataTreeMaker::Init()
 //     fHeader = (CbmMCEventHeader*) ioman->GetObject("MCEventHeader.");
     flistPSDhit = (TClonesArray*) ioman->GetObject("PsdHit");
     flistPSDdigit = (TClonesArray*) ioman->GetObject("PsdDigi");
-    flistSTSMCtrack = (TClonesArray*) ioman->GetObject("MCTrack");
+    flistMCtrack = (TClonesArray*) ioman->GetObject("MCTrack");
     flistSTSRECOtrack = (TClonesArray*) ioman->GetObject("StsTrack");
     flistSTStrackMATCH = (TClonesArray*) ioman->GetObject("StsTrackMatch");
+    fGlobalTrackArray = (TClonesArray*) ioman->GetObject("GlobalTrack");
+    fTofHitArray = (TClonesArray*) ioman->GetObject("TofHit");
     
     DataTreeEvent_Init();
     OutputTree_Init();
@@ -76,10 +85,10 @@ void DataTreeMaker::OutputTree_Init()
 {
     fTreeFile = new TFile(sOutputFileName, "RECREATE");
     fTreeFile -> cd();
-    fTreeQA = new TTree("fTreeQA","fTreeQA");
-    fTreeQA -> SetMaxTreeSize(9000000);
+    fDataTree = new TTree("fDataTree","fDataTree");
+    fDataTree -> SetMaxTreeSize(9000000);
     
-    fTreeQA -> Branch("DTEvent", &DTEvent, 256000, 3);    
+    fDataTree -> Branch("DTEvent", &DTEvent, 256000, 3);    
 }
 //--------------------------------------------------------------------------------------------------
 void DataTreeMaker::PSD_Init()
@@ -105,8 +114,13 @@ void DataTreeMaker::Exec(Option_t* opt)
     Read_Event();
     Read_PSD();
     Read_STS();
+    Read_V0_Candidate(0);
+    Read_V0_Candidate(1);
+    Read_MC_Tracks();
+    Read_TOF_Hits();
+//     Read_Generated_Tracks();
     DTEvent -> Process();
-    fTreeQA -> Fill();
+    fDataTree -> Fill();
 }
 //--------------------------------------------------------------------------------------------------
 void DataTreeMaker::Clear_Event()
@@ -121,10 +135,13 @@ void DataTreeMaker::Read_Event()
     {
 	DTEvent -> SetRPAngle(fHeader -> GetRotZ());
 	DTEvent -> SetImpactParameter(fHeader -> GetB());
+	DTEvent -> SetRunId(fHeader -> GetRunID());
+	DTEvent -> SetEventId(fHeader -> GetEventID());
+	DTEvent -> SetMCVertexPosition(fHeader->GetX(),fHeader->GetY(),fHeader->GetZ());
     }
     //BEGIN temp for bad phi data
     fTreeEvents->GetEntry(fCurEvent-1);
-    DTEvent -> SetRPAngle(uEvent->GetPhi());//used only for DCM-QGSM
+    if (Generator == 1){DTEvent -> SetRPAngle(uEvent->GetPhi());}//used only for DCM-QGSM
 //     cout << "RPAngle = " << DTEvent -> GetRPAngle() << endl;
     //END temp for bad phi data
 }
@@ -155,14 +172,103 @@ void DataTreeMaker::Read_PSD()
     }
 }
 //--------------------------------------------------------------------------------------------------
+void DataTreeMaker::Read_Generated_Tracks()
+{
+    double pid;
+    double pT;
+    double eta;
+    double phi;
+    double px;
+    double py;
+    double pz;
+    double p;
+        
+    TLorentzVector Momentum;
+    for (int j=0;j<uEvent->GetNpa();j++)
+    {
+        pid = uEvent->GetParticle(j)->GetPdg();
+        Momentum = uEvent->GetParticle(j)->GetMomentum();
+//             std::cout << "pT = " << Momentum.Pt() << "; eta = " << Momentum.Eta() << "; phi = " << Momentum.Phi() << std::endl;
+        pT = Momentum.Pt();
+        eta = Momentum.Eta();
+        phi = Momentum.Phi();
+	px = Momentum.Px();
+	py = Momentum.Py();
+	pz = Momentum.Pz();
+	p = Momentum.Px();
+	
+//         if (phi > 2*TMath::Pi()) phi = phi - 2*TMath::Pi();
+//         if (phi < -2*TMath::Pi()) phi = phi + 2*TMath::Pi();
+	DTEvent->AddTrack();
+	DTEvent->GetTrack(j)->SetPt(1,pT);
+	DTEvent->GetTrack(j)->SetPhi(1,phi);
+	DTEvent->GetTrack(j)->SetEta(1,eta);
+	DTEvent->GetTrack(j)->SetPx(1,px);
+	DTEvent->GetTrack(j)->SetPy(1,py);
+	DTEvent->GetTrack(j)->SetPz(1,pz);
+	DTEvent->GetTrack(j)->SetP(1,p);
+//         if (pid == 2212){pid = 1;}else{pid = 0;}
+        DTEvent->GetTrack(j)->SetFlag(1,pid);
+    }
+}
+//--------------------------------------------------------------------------------------------------
+void DataTreeMaker::Read_MC_Tracks()
+{
+    CbmMCTrack* mctrack;
+    Double_t p, px, py, pz, energy, mass, charge, pT, phi, eta, MC_px, MC_py, MC_pz, MC_p, MC_pT, MC_phi, MC_eta, chi2;
+    int nTracks = flistMCtrack->GetEntries();
+    for (int i=0;i<nTracks;i++)
+    {
+	mctrack = (CbmMCTrack*) flistMCtrack->At(i);
+	int motherid = mctrack->GetMotherId();
+	if (motherid != -1) continue;
+	int type = mctrack->GetPdgCode();
+	if (type < 1000000000)
+	{
+	    charge = mctrack->GetCharge();
+	    mass = mctrack->GetMass();
+	}
+	else
+	{
+	    //pdg = 1000000000 + 10*1000*z + 10*a + i;
+	    charge = TMath::Floor( ( type - 1000000000 ) / 10000 );
+	    mass = TMath::Floor( ( type - 1000000000 -  10000 * charge ) / 10 );
+	}
+	MC_px = mctrack->GetPx();
+	MC_py = mctrack->GetPy();
+	MC_pz = mctrack->GetPz();
+	MC_p = TMath::Sqrt(MC_px*MC_px + MC_py*MC_py + MC_pz*MC_pz);
+	MC_pT = TMath::Sqrt(MC_px*MC_px + MC_py*MC_py);
+	MC_phi = TMath::ATan2(MC_py,MC_px);
+	if (MC_phi<-TMath::Pi()) MC_phi+=2*TMath::Pi();
+	if (MC_phi>TMath::Pi()) MC_phi-=2*TMath::Pi();
+	MC_eta = TMath::Log((MC_p+MC_pz)/(MC_p-MC_pz))/2.;
+	
+	DTEvent -> AddMCTrack();
+	DataTreeMCTrack* DTMCTrack = DTEvent -> GetMCTrack(i);
+	DTMCTrack->SetPx(MC_px);
+	DTMCTrack->SetPy(MC_py);
+	DTMCTrack->SetPz(MC_pz);
+	DTMCTrack->SetP(MC_p);
+	DTMCTrack->SetPt(MC_pT);
+	DTMCTrack->SetEta(MC_eta);
+	DTMCTrack->SetPhi(MC_phi);
+	DTMCTrack->SetMass(mass);
+	DTMCTrack->SetCharge(charge);
+	DTMCTrack->SetPdgId(type);
+	DTMCTrack->SetMotherId(motherid);
+    }
+}
+//--------------------------------------------------------------------------------------------------
 void DataTreeMaker::Read_STS()
 {
     CbmStsTrack* track;
     CbmTrackMatchNew* match;
+//     CbmTrackMatch* match;
     CbmMCTrack* mctrack;
 	
-    Double_t p, px, py, pz, energy, mass, pT, phi, eta, MC_px, MC_py, MC_pz, MC_p, MC_pT, MC_phi, MC_eta;
-    Int_t type, trackID;
+    Double_t p, px, py, pz, energy, mass, pT, phi, eta, MC_px, MC_py, MC_pz, MC_p, MC_pT, MC_phi, MC_eta, chi2;
+    Int_t type, trackID, motherid;
     
     const FairTrackParam *trackParam;
     TVector3 momRec;
@@ -188,10 +294,10 @@ void DataTreeMaker::Read_STS()
     vector<L1FieldRegion> vField;
 
     vector<int> Pdg;
-    Pdg.resize(nSTStracks); 
+    Pdg.resize(nSTStracks);
+    int idx=0;
     for (Int_t i=0; i<nSTStracks; i++)
     {
-	DTEvent->AddTrack();
 	vRTracks[i] = *( (CbmStsTrack*) flistSTSRECOtrack->At(i));
 	
 	if(!track)
@@ -199,6 +305,8 @@ void DataTreeMaker::Read_STS()
 	    cout << "ERROR: empty track!";
 	    continue;
 	}
+	DTEvent->AddTrack();
+        
 	track = &vRTracks[i];
 	trackParam = track->GetParamFirst();	
 	trackParam->Momentum(momRec);
@@ -213,16 +321,24 @@ void DataTreeMaker::Read_STS()
 	if (phi>TMath::Pi()) phi-=2*TMath::Pi();
 	eta = TMath::Log((p+pz)/(p-pz))/2.;
 	
-	DTEvent->GetTrack(i)->SetPt(0,pT);
-	DTEvent->GetTrack(i)->SetPhi(0,phi);
-	DTEvent->GetTrack(i)->SetEta(0,eta);
+	DataTreeTrack* DTTrack = DTEvent->GetTrack(idx);
 	
-	DTEvent->GetTrack(i)->SetNofHits(0,track->GetNofHits());
-	DTEvent->GetTrack(i)->SetFlag(0,track->GetFlag());
-	DTEvent->GetTrack(i)->SetChiSq(0,track->GetChiSq());
-	DTEvent->GetTrack(i)->SetNDF(0,track->GetNDF());
-		
+	DTTrack->SetPt(0,pT);
+	DTTrack->SetPhi(0,phi);
+	DTTrack->SetEta(0,eta);
+	DTTrack->SetPx(0,px);
+	DTTrack->SetPy(0,py);
+	DTTrack->SetPz(0,pz);
+	DTTrack->SetP(0,p);
+	
+	DTTrack->SetNofHits(0,track->GetNofHits());
+	DTTrack->SetFlag(0,track->GetFlag());
+	DTTrack->SetChiSq(0,track->GetChiSq());
+// 	DTTrack->SetVtxChiSq(0,vChiToPrimVtx[i]);
+	DTTrack->SetNDF(0,track->GetNDF());
+	
 	Pdg[i] = 211;
+        idx++;
     }
     
 //     double Chi2_test[nSTStracks];
@@ -239,7 +355,7 @@ void DataTreeMaker::Read_STS()
 //     fitter.Fit(vRTracks, pdg);
     fitter.GetChiToVertex(vRTracks, vField, vChiToPrimVtx, kfVertex, 1.e9f);//tracks array, field, dca over error
     //END fitter
-    
+    idx=0;
     for (Int_t i=0; i<nSTStracks; i++)
     {
 	track = &vRTracks[i];
@@ -248,22 +364,29 @@ void DataTreeMaker::Read_STS()
 	    cout << "ERROR: empty track!";
 	    continue;
 	}
-	
-// 	match = (CbmTrackMatchNew*) flistSTStrackMATCH->At(i);
-// 	trackID = match->GetMCTrackId();
-// 	cout << "trackID = " << trackID << endl;
+	match = (CbmTrackMatchNew*) flistSTStrackMATCH->At(i);
+// 	match = (CbmTrackMatch*) flistSTStrackMATCH->At(i);
+	if (match == NULL) continue;
+	trackID = match->GetMatchedLink().GetIndex();
 // 	cout << trackID << endl;
 // 	if (trackID >= 0)
 // 	{
-// 	    mctrack = (CbmMCTrack*) flistSTSMCtrack->At(trackID);
+// 	    mctrack = (CbmMCTrack*) flistMCtrack->At(trackID);
 // 	    if (!mctrack)
 // 	    {
 // 		cout << "No mc track found!" << endl;
+//                 MC_pT = nUndefinedValue;
+//                 MC_eta = nUndefinedValue;
+//                 MC_phi = nUndefinedValue;
+//                 type = nUndefinedValue;
+//                 mass = nUndefinedValue;
+// 		motherid = nUndefinedValue;
 // 	    }
 // 	    else
 // 	    {
-// // 		type = mctrack->GetPdgCode();
-// // 		mass = mctrack->GetMass();	
+// 		motherid = mctrack->GetMotherId();
+// 		type = mctrack->GetPdgCode();
+// 		mass = mctrack->GetMass();	
 // 		MC_px = mctrack->GetPx();
 // 		MC_py = mctrack->GetPy();
 // 		MC_pz = mctrack->GetPz();
@@ -273,10 +396,18 @@ void DataTreeMaker::Read_STS()
 // 		if (MC_phi<-TMath::Pi()) MC_phi+=2*TMath::Pi();
 // 		if (MC_phi>TMath::Pi()) MC_phi-=2*TMath::Pi();
 // 		MC_eta = TMath::Log((MC_p+MC_pz)/(MC_p-MC_pz))/2.;
-// 		Sim_TPC_track_pT[i] = MC_pT;
-// 		Sim_TPC_track_eta[i] = MC_eta;
-// 		Sim_TPC_track_phi[i] = MC_phi;
+// // 		Sim_TPC_track_pT[i] = MC_pT;
+// // 		Sim_TPC_track_eta[i] = MC_eta;
+// // 		Sim_TPC_track_phi[i] = MC_phi;
+// // 		cout << "pT = " << MC_pT << "; eta = " << MC_eta << "; phi = " << MC_phi << endl;
 // 	    }
+//             DTEvent->AddMCTrack();
+//             DTEvent->GetMCTrack(idx)->SetPt(MC_pT);
+//             DTEvent->GetMCTrack(idx)->SetPhi(MC_phi);
+//             DTEvent->GetMCTrack(idx)->SetEta(MC_eta);
+//             DTEvent->GetMCTrack(idx)->SetPdgId(type);
+//             DTEvent->GetMCTrack(idx)->SetMass(mass);
+//             DTEvent->GetMCTrack(idx)->SetMotherId(motherid);
 // 	}
 	
 	trackParam = track->GetParamFirst();	
@@ -292,25 +423,187 @@ void DataTreeMaker::Read_STS()
 	if (phi>TMath::Pi()) phi-=2*TMath::Pi();
 	eta = TMath::Log((p+pz)/(p-pz))/2.;
 	
-	DTEvent->GetTrack(i)->SetPt(1,pT);
-	DTEvent->GetTrack(i)->SetPhi(1,phi);
-	DTEvent->GetTrack(i)->SetEta(1,eta);
 	
-	DTEvent->GetTrack(i)->SetNofHits(1,track->GetNofHits());
-	DTEvent->GetTrack(i)->SetFlag(1,track->GetFlag());
-	DTEvent->GetTrack(i)->SetChiSq(1,track->GetChiSq());
-	DTEvent->GetTrack(i)->SetNDF(1,track->GetNDF());
+	DataTreeTrack* DTTrack = DTEvent -> GetTrack(idx);
+	DTTrack->SetPt(1,pT);
+	DTTrack->SetPhi(1,phi);
+	DTTrack->SetEta(1,eta);
+	DTTrack->SetPx(1,px);
+	DTTrack->SetPy(1,py);
+	DTTrack->SetPz(1,pz);
+	DTTrack->SetP(1,p);
 	
+	DTTrack->SetNofHits(1,track->GetNofHits());
+	DTTrack->SetFlag(1,track->GetFlag());
+	DTTrack->SetChiSq(1,track->GetChiSq());
+	DTTrack->SetVtxChiSq(1,vChiToPrimVtx[i]);
+	DTTrack->SetNDF(1,track->GetNDF());
+	
+	DTTrack -> SetMCTrackId(trackID);
+	
+	
+        idx++;
 // 	cout << pT << " " << NofHits << " " << Chi2 << endl;
 // 	cout << i << " Chi2: after " << track->GetChiSq() << " and before " << Chi2_test[i] << "; Chi2/NDF after " << track->GetChiSq()/track->GetNDF() << " and before " << Chi2_test[i]/NDF_test[i] << endl;
     }
+//     idx=0;
+//     for (int i=0;i<flistMCtrack->GetEntries();i++)
+//     {
+//         mctrack = (CbmMCTrack*) flistMCtrack->At(trackID);
+//         if (!mctrack)
+//         {
+//             cout << "No mc track found!" << endl;
+//         }
+//         else
+//         {
+// // // 		type = mctrack->GetPdgCode();
+// // // 		mass = mctrack->GetMass();	
+//             MC_px = mctrack->GetPx();
+//             MC_py = mctrack->GetPy();
+//             MC_pz = mctrack->GetPz();
+//             MC_p = TMath::Sqrt(MC_px*MC_px + MC_py*MC_py + MC_pz*MC_pz);
+//             MC_pT = TMath::Sqrt(MC_px*MC_px + MC_py*MC_py);
+//             MC_phi = TMath::ATan2(MC_py,MC_px);
+//             if (MC_phi<-TMath::Pi()) MC_phi+=2*TMath::Pi();
+//             if (MC_phi>TMath::Pi()) MC_phi-=2*TMath::Pi();
+//             MC_eta = TMath::Log((MC_p+MC_pz)/(MC_p-MC_pz))/2.;
+// // 		Sim_TPC_track_pT[i] = MC_pT;
+// // 		Sim_TPC_track_eta[i] = MC_eta;
+// // 		Sim_TPC_track_phi[i] = MC_phi;
+//             DTEvent->AddMCTrack();
+//             DTEvent->GetMCTrack(idx)->SetPt(MC_pT);
+//             DTEvent->GetMCTrack(idx)->SetPhi(MC_phi);
+//             DTEvent->GetMCTrack(idx)->SetEta(MC_eta);
+//             idx++;
+//         }
+//     }
 }
+//--------------------------------------------------------------------------------------------------
+void DataTreeMaker::Read_TOF_Hits()
+{
+    for (Int_t igt = 0; igt < fGlobalTrackArray->GetEntries(); igt++)
+    {  
+	const CbmGlobalTrack* globalTrack = static_cast<const CbmGlobalTrack*>(fGlobalTrackArray->At(igt));
 
+	Int_t stsTrackIndex = globalTrack->GetStsTrackIndex();
+	if( stsTrackIndex<0 ) continue;
+
+	CbmStsTrack* cbmStsTrack = (CbmStsTrack*) flistSTSRECOtrack->At(stsTrackIndex);
+	
+	const FairTrackParam *stsPar = cbmStsTrack->GetParamLast(); 
+	TVector3 mom;
+	stsPar->Momentum(mom);
+
+	Double_t p = mom.Mag();
+	Int_t q = stsPar->GetQp() > 0 ? 1 : -1;
+	
+	Double_t l = globalTrack->GetLength();// l is calculated by global tracking
+	
+	Double_t time;
+	Int_t tofHitIndex = globalTrack->GetTofHitIndex();
+	if (tofHitIndex >= 0) 
+	{
+	    const CbmTofHit* tofHit = static_cast<const CbmTofHit*>(fTofHitArray->At(tofHitIndex));
+	    if(!tofHit) continue;
+	    time = tofHit->GetTime();
+	
+	    Double_t m2 = p*p*(1./((l/time/SpeedOfLight)*(l/time/SpeedOfLight))-1.);
+	    
+	    DataTreeTOFHit* DTTOFHit = DTEvent->AddTOFHit();
+	    DTTOFHit -> SetPosition(tofHit->GetX(),tofHit->GetY(),tofHit->GetZ());
+	    DTTOFHit -> SetTime(time);
+	    DTTOFHit -> SetMass2(m2);
+	    DTTOFHit -> SetLength(l);
+	    DTTOFHit -> SetBeta(l/time/SpeedOfLight);
+	    DTTOFHit -> SetP(p);
+	    DTTOFHit -> SetCharge(q);
+	}
+	else
+	    continue;
+    }
+}
+//--------------------------------------------------------------------------------------------------
+void DataTreeMaker::Read_V0_Candidate(int UseMCpid = 0)
+{
+    const KFParticleTopoReconstructor* tr;
+    if (!UseMCpid){tr = fCbmKFParticleFinder_TOF -> GetTopoReconstructor();}
+    if (UseMCpid){tr = fCbmKFParticleFinder_MC -> GetTopoReconstructor();}
+    if (!tr) cout << "DataTreeMaker::Read_V0_Candidate_TOF: ERROR: no KFParticleTopoReconstructor!" << endl;
+//     printf("Particles: %d\n",tr->GetParticles().size());
+    const int ConstNV0Types = DTEvent -> GetNV0Types();
+//     cout << "DataTreeMaker::Read_V0_Candidate: ConstNV0Types = " << ConstNV0Types << endl;
+    int V0Mult[ConstNV0Types];
+    for (int i=0;i<ConstNV0Types;i++){V0Mult[i]=0;}
+	
+    for(unsigned int iP=0; iP<tr->GetParticles().size(); iP++)
+    {
+    //  printf("PDG: %d\n",tr->GetParticles()[iP].GetPDG());
+	bool accept_V0 = false;
+	for (int i=0;i<ConstNV0Types;i++)
+	{
+	    if (tr->GetParticles()[iP].GetPDG() == DTEvent -> GetNV0Pdg(i)){accept_V0 = true; V0Mult[i]++;}
+	}
+	if (!accept_V0) continue;
+	
+	const KFParticle& V0 = tr->GetParticles()[iP];
+	DataTreeV0Candidate* V0Candidate;
+	if (!UseMCpid){V0Candidate = DTEvent -> AddV0CandidateTOFpid();}
+	if (UseMCpid){V0Candidate = DTEvent -> AddV0CandidateMCpid();}
+	if (!V0Candidate) cout << "DataTreeMaker::Read_V0_Candidate_TOF: ERROR: no V0Candidate!" << endl;
+	
+	V0Candidate -> SetPx(V0.GetPx());
+	V0Candidate -> SetPy(V0.GetPy());
+	V0Candidate -> SetPz(V0.GetPz());
+	V0Candidate -> SetPt(V0.GetPt());
+	V0Candidate -> SetEta(V0.GetEta());
+	V0Candidate -> SetPhi(V0.GetPhi());
+	V0Candidate -> SetP(V0.GetP());
+	V0Candidate -> SetPdgId(V0.GetPDG());
+	V0Candidate -> SetMass(V0.GetMass());
+	
+
+// 	printf("V0 mother p: %f, %f, %f\n",V0.GetPx(),V0.GetPy(),V0.GetPz());
+
+// 	if(V0id>nV0){ printf("Number of V0 candidates exceed maximum (%d)",nV0); continue;}
+
+	if(V0.NDaughters()!=nV0Daughters){ printf("Number of daughters not %d (%d)!\n",nV0Daughters, V0.NDaughters()); continue;}
+
+	for(int iDaughter=0; iDaughter<V0.NDaughters(); iDaughter++)
+	{
+	    int daugherIndex = V0.DaughterIds()[iDaughter];
+	    const KFParticle& daughter = tr->GetParticles()[daugherIndex];
+	    
+	    V0Candidate -> AddDaughter();
+	    DataTreeV0Candidate* Daughter = V0Candidate -> GetDaughter(iDaughter);
+	    Daughter -> SetPx(daughter.GetPx());
+	    Daughter -> SetPy(daughter.GetPy());
+	    Daughter -> SetPz(daughter.GetPz());
+	    Daughter -> SetPt(daughter.GetPt());
+	    Daughter -> SetEta(daughter.GetEta());
+	    Daughter -> SetPhi(daughter.GetPhi());
+	    Daughter -> SetP(daughter.GetP());
+	    Daughter -> SetPdgId(daughter.GetPDG());
+	    Daughter -> SetMass(daughter.GetMass());
+	    if( daughter.NDaughters()==1 ){Daughter -> SetTrackId(daughter.DaughterIds()[0]);}
+	}
+    }
+
+    int V0Mult_All = 0;
+    for (int i=0;i<ConstNV0Types;i++)
+    {
+	if (!UseMCpid){DTEvent -> SetNV0SpecificCandidatesTOFpid(i,V0Mult[i]);}
+	if (UseMCpid){DTEvent -> SetNV0SpecificCandidatesMCpid(i,V0Mult[i]);}
+	V0Mult_All+=V0Mult[i];
+    }
+    if (!UseMCpid){DTEvent -> SetNV0CandidatesTOFpid(V0Mult_All);}
+    if (UseMCpid){DTEvent -> SetNV0CandidatesMCpid(V0Mult_All);}
+// printf("Multiplicities: %d, %d, %d\n",V0Mult[0],V0Mult[1],V0Mult[2]);
+}
 //================================================================> FINISH <==============================================================
 void DataTreeMaker::Finish()
 {
     cout << "DataTreeMaker::Finish" << endl;
-    fTreeQA -> Write();
+    fDataTree -> Write();
     fTreeFile -> Write();
     fTreeFile -> Close();
 }
@@ -372,7 +665,7 @@ ClassImp(DataTreeMaker)
 // 	    //if (trackID < 0) continue; // ghost track from combinatorix (no corresponding MC tracks)
 // 	    if (trackID >= 0)
 // 	    {
-// 		mctrack = (CbmMCTrack*) flistSTSMCtrack->At(trackID); 
+// 		mctrack = (CbmMCTrack*) flistMCtrack->At(trackID); 
 // 		//cout << "trackID = " << trackID << endl;
 // 		if (!mctrack)
 // 		{
@@ -484,7 +777,7 @@ ClassImp(DataTreeMaker)
 // 	const FairTrackParam *trackParam;
 // 	TVector3 momRec;
 // 
-// 	Int_t nMC_STStracks = flistSTSMCtrack->GetEntriesFast();
+// 	Int_t nMC_STStracks = flistMCtrack->GetEntriesFast();
 // 	//cout << "evenPlane::STSRECOtransverseMomMeth: # STS reco tracks = " << nMC_STStracks << endl; 
 // 	
 // 	// Extrapolation track parameters back to primary vertex
@@ -495,7 +788,7 @@ ClassImp(DataTreeMaker)
 // 	fEvent_Multiplicity_MC_STS = 0;
 // 	for (Int_t i=0; i<nMC_STStracks; i++)
 // 	{
-// 	    vRTracks[i] = *( (CbmMCTrack*) flistSTSMCtrack->At(i));  
+// 	    vRTracks[i] = *( (CbmMCTrack*) flistMCtrack->At(i));  
 // 	    mctrack = &vRTracks[i];
 // 	    
 // 	    //============================================================
@@ -1104,7 +1397,7 @@ ClassImp(DataTreeMaker)
 // // 	    
 // // 	    if (trackID < 0) continue; // ghost track from combinatorix (no corresponding MC tracks)
 // // 	    
-// // 	    mctrack = (CbmMCTrack*) flistSTSMCtrack->At(trackID); 
+// // 	    mctrack = (CbmMCTrack*) flistMCtrack->At(trackID); 
 // // 	    type = mctrack->GetPdgCode();
 // // 	    mass = mctrack->GetMass();	
 // // 	    MC_px = mctrack->GetPx();
