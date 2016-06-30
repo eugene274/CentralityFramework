@@ -20,15 +20,18 @@
 #pragma link C++ class GlauberFitter+;
 #pragma link C++ class GlauberParGetter+;
 
-#pragma link C++ class DataTreeEvent+;
-#pragma link C++ class DataTreeMCTrack+;
-#pragma link C++ class DataTreePSDModule+;
-#pragma link C++ class DataTreePSDSection+;
-#pragma link C++ class DataTreeTrack+;
-#pragma link C++ class DataTreeTOFSegment+;
-#pragma link C++ class DataTreeV0Candidate+;    
-#pragma link C++ class DataTreeTrigger+;
-#pragma link C++ class DataTreeBPD+;
+#pragma link C++ class DataTreeBPD++             ;
+#pragma link C++ class DataTreeConverterNA61++   ;
+#pragma link C++ class DataTreeEvent++           ;
+// #pragma link C++ class DataTreeMaker++           ;
+#pragma link C++ class DataTreeMCTrack++         ;
+#pragma link C++ class DataTreePSDModule++       ;
+#pragma link C++ class DataTreePSDSection++      ;
+#pragma link C++ class DataTreeSTSTrack++        ;
+#pragma link C++ class DataTreeTOFHit++          ;
+#pragma link C++ class DataTreeTrack++           ;
+#pragma link C++ class DataTreeTrigger++         ;
+#pragma link C++ class DataTreeV0Candidate++     ;
 
 #pragma link C++ class TreeInterface+;    
 
