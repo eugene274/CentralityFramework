@@ -1,101 +1,85 @@
 #include "TreeInterface.h"
+#include "../config/ContConfig.C"
 
 ClassImp(TreeInterface)
+
+using std::cout;
+using std::endl;
+using std::flush;
+
 
 // -----   Default constructor   -------------------------------------------
 TreeInterface::TreeInterface() 
   : TNamed(),
-    fEvent (new DataTreeEvent)
+    fEvent (new DataTreeEvent),
+    fPsdGeomConfig ("CBM_44")
 {
 }
 
-void TreeInterface::Test ()
+void TreeInterface::WriteCentralityContainer ()
 {
     
-    
+    TFile *fInFile = new TFile (fInFileName);
+    TTree *fInTree = (TTree*) fInFile->Get("fDataTree"); 
+    fInTree->SetBranchAddress("DTEvent", &fEvent);
+
     fContainer = new CentralityEventContainer;
     
-    CentralityDetectorEvent psd; //= new CentralityDetectorEvent;
-    CentralityDetectorEvent tpc ; //= new CentralityDetectorEvent;
+    CentralityDetectorEvent psd; 
+    CentralityDetectorEvent tpc ; 
     
-    if (true) { fContainer->AddDetector(psd); }
-    if (true) { fContainer->AddDetector(psd); }
-    if (true) { fContainer->AddDetector(psd); }
-    if (true) { fContainer->AddDetector(tpc);  }
+//     if (fPsdGeomConfig == "CBM_44"){
     
-    fOutTree = new TTree ( "cbm_data", "cbm_data" );
+        if (true) { fContainer->AddDetector(psd); }
+        if (true) { fContainer->AddDetector(psd); }
+        if (true) { fContainer->AddDetector(psd); }
+//         if (true) { fContainer->AddDetector(psd); }
+//         if (true) { fContainer->AddDetector(psd); }
+//         if (true) { fContainer->AddDetector(psd); }
+        if (true) { fContainer->AddDetector(tpc);  }
+//     }
+    
+    fOutFile = new TFile (fOutFileName.Data(), "recreate");    
+    fOutTree = new TTree ( "container", "container" );
     fOutTree->Branch("CentralityEventContainer", "CentralityEventContainer", &fContainer);
-    
     fOutTree->SetDirectory(0);  
-
-    
-    
-    
-    
-    TString fInfileName;
-    fInfileName = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/InputTree/test_tree.root";
-    
-    TFile *fInFile;
-    fInFile = new TFile (fInfileName);
-    
-    TTree *fInTree;
-    fInTree = (TTree*) fInFile->Get("fTreeQA");
-    
-    fInTree->SetBranchAddress("DTEvent", &fEvent);
     
     Int_t nEntries = fInTree->GetEntries();
     
-    DataTreePSDModule *PdsMod = new DataTreePSDModule;
-    
-    for (Int_t iEntry = 0; iEntry<1/*nEntries*/; iEntry++)
+    cout << "Reading " << nEntries << " events from chain..." << endl;
+    for (Int_t iEntry = 0; iEntry<nEntries; iEntry++)
     {
+        
+        if ((iEntry+1) % 50 == 0) cout << "Event # " << iEntry+1 << "... \r" << flush; 
+        
         fInTree->GetEntry (iEntry);
-        Double_t B = fEvent->GetImpactParameter();
+        
+        if (!isSelectedEvent (fEvent)) continue;
+        
+        int nTracks_Ref = ContConfig(fEvent);
                 
         std::vector <float> psd1 = SetPsdVector(1);
         std::vector <float> psd2 = SetPsdVector(2);
         std::vector <float> psd3 = SetPsdVector(3);
-        std::vector <float> sts (1,1);
+        std::vector <float> sts (1, nTracks_Ref);
 
-        fContainer->AddDetectorEvent (0, psd1);
-        fContainer->AddDetectorEvent (1, psd2);
-        fContainer->AddDetectorEvent (2, psd3);        
-        fContainer->AddDetectorEvent (3, sts);
-        fContainer->SetRunId (0);
-        fContainer->SetB (B);
+        fContainer->AddDetectorEvent (0, sts);
+        fContainer->AddDetectorEvent (1, psd1);
+        fContainer->AddDetectorEvent (2, psd2);        
+        fContainer->AddDetectorEvent (3, psd3);        
 
-        fOutTree->Fill();
+        fContainer->SetRunId (fEvent->GetRunId());
+        fContainer->SetEventId(fEvent->GetEventId());
+        fContainer->SetB (fEvent->GetImpactParameter());
 
-
-        for (UInt_t i=0; i<psd1.size(); i++)
-            std::cout << psd1.at(i) << ", ";
-        std::cout << std::endl;
-
-        for (UInt_t i=0; i<psd2.size(); i++)
-            std::cout << psd2.at(i) << ", ";
-        std::cout << std::endl;
-
-        for (UInt_t i=0; i<psd3.size(); i++)
-            std::cout << psd3.at(i) << ", ";
-        std::cout << std::endl;
-
-//         for (Int_t iMod = 1; iMod<=44; iMod++){
-//             PdsMod = fEvent->GetPSDModule(iMod-1);
-//             Double_t energy = PdsMod->GetEnergy();
-//             
-//             std::cout << "ModuleId = " << iMod << "    Energy = " << energy << std::endl;
-//             
-//         }        
-        
-        
-
-        std::cout << "EventId = " << iEntry << "    Impact Parameter = " << B << std::endl;
-        
+        fOutTree->Fill();        
         
     }
 
-    
-}
+    cout << "Writing centrility container..." << endl;
+    fOutTree->Write();
+    fOutFile->Close();
+    cout << "Done! Centrality container " <<  fOutFileName <<  " created!" << endl;}
 
 std::vector <Float_t> TreeInterface::SetPsdVector(Int_t subgroup)
 {
@@ -103,7 +87,7 @@ std::vector <Float_t> TreeInterface::SetPsdVector(Int_t subgroup)
     std::vector <Float_t> psdEnergies;
     DataTreePSDModule *PdsMod = new DataTreePSDModule;
     
-    if  (true/*fPsdGeomConfig == "CBM_44"*/){   //NOTE later can be used for NA61 ?
+    if  (fPsdGeomConfig == "CBM_44"){   //NOTE later can be used for CBM ?
         
         std::vector <Int_t> PsdPos;
         if ( subgroup == 1 )
@@ -112,7 +96,10 @@ std::vector <Float_t> TreeInterface::SetPsdVector(Int_t subgroup)
             PsdPos = {9, 10, 11, 12, 17, 20, 33, 34, 35, 36, 25, 28};
         else if ( subgroup == 3 )
             PsdPos = {1,2,3,4,5,6,7,8,13,14,15,16,21,22,23,24,29,30,31,32,37,38,39,40,41,42,43,44};            
- 
+        else 
+            std::cout << "TreeInterface::SetPsdVector:  Wrong PSD subgroup identificator!" << std::endl;
+        
+        
         for (UInt_t i=0; i<PsdPos.size(); i++)
         {
             PdsMod = fEvent->GetPSDModule(PsdPos.at(i)-1);
@@ -122,25 +109,58 @@ std::vector <Float_t> TreeInterface::SetPsdVector(Int_t subgroup)
         }
     }
     
-//     else if (fPsdGeomConfig == "NA61"){
-//         
-//         std::vector <Int_t> PsdPos;
-//         if ( fDetName == "psd1" || fDetName == "PSD1" )
-//             PsdPos = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,45};
-//         else if ( fDetName == "psd2" || fDetName == "PSD2" )
-//             PsdPos = {22,23,24,25,28,29,32,33,36,37,38,39};
-//         else if ( fDetName == "psd3" || fDetName == "PSD3" )
-//             PsdPos = {17,18,19,20,21,30,31,34,35,40,41,42,43,44};            
-// 
-//         for (Int_t i=0; i<PsdPos.size(); i++)
-//         {
-//             hit = (CbmPsdHit*) flistPSDhit->At(PsdPos.at(i)-1);
-//             Float_t edep = 0;
-//             if ( hit ) edep = hit->GetEdep();
-//             psdEnergies.push_back(edep);
-//         }
-//     }    
-//     std::cout << "psd1Energy = " << psd1Energy << std::endl;    
+    else if (fPsdGeomConfig == "NA61"){
+        
+        std::vector <Int_t> PsdPos;
+        if ( subgroup == 1 )
+            PsdPos = {6,7,10,11};
+        else if ( subgroup == 2 )
+            PsdPos = {1,2,3,4,5,8,9,12,13,14,15,16};
+        else if ( subgroup == 12 )
+            PsdPos = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,45};
+        else if ( subgroup == 3 )
+            PsdPos = {22,23,24,25,28,29,32,33,36,37,38,39};
+        else if ( subgroup == 4 )
+            PsdPos = {17,18,19,20,21,30,31,34,35,40,41,42,43,44};            
+        else if ( subgroup == 1234 )
+            PsdPos = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45};            
+        else 
+            std::cout << "TreeInterface::SetPsdVector:  Wrong PSD subgroup identificator!" << std::endl;
+        
+        for (UInt_t i=0; i<PsdPos.size(); i++)
+        {
+            PdsMod = fEvent->GetPSDModule(PsdPos.at(i)-1);
+            Float_t edep = 0;
+            if ( PdsMod ) edep = PdsMod->GetEnergy();
+            psdEnergies.push_back(edep);
+        }
+    }    
     
     return psdEnergies;
 }
+
+
+bool TreeInterface::isRefMultTrack(int iTrk)
+{
+    Float_t Beam_eta = 2.0792;
+    DataTreeTrack* track = fEvent->GetTrack(iTrk);
+    if (track->GetEta(0) < Beam_eta - 0.5 || track->GetEta(0) > Beam_eta + 0.5) return false;
+    if (track->GetNofHits(0,1) > 72 || track->GetNofHits(0,2) > 72 || track->GetNofHits(0,3) > 89) return false;
+    if (track->GetDCAComponent(0,0) > 2 || track->GetDCAComponent(0,1) > 2) return false;
+    if (TMath::Sqrt(TMath::Power(track->GetDCAComponent(0,0),2)+TMath::Power(track->GetDCAComponent(0,1),2)) > 2) return false;
+    if (track->GetNofHits(0,1) < 6 && track->GetNofHits(0,2) < 10 && track->GetNofHits(0,3) < 6) return false;
+    return true;
+}
+
+bool TreeInterface::isGoodEvent(Int_t nTPC_Tracks_Ref)
+{
+    Float_t fPSD_Energy_Total = fEvent->GetPSDEnergy();
+    if (fEvent->GetVertexPositionComponent(2) > -584.5 || fEvent->GetVertexPositionComponent(2) < -589) return false;
+    if (nTPC_Tracks_Ref < 0) return false;
+//     if (fPSD_Energy_Total < 1200 || fPSD_Energy_Total > 6000) return false;   //TODO check
+    if (fEvent->GetTrigger(7)->GetSignal() != 1) return false;
+    if (fPSD_Energy_Total  < 4500 - nTPC_Tracks_Ref*(4500.-1200.)/180.) return false;  //TODO check
+    return true;
+}
+
+
