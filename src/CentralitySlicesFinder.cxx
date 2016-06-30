@@ -127,7 +127,7 @@ void CentralitySlicesFinder::Fit2DCorrelation ()
     fNormTree->Draw( "det2 : det1  >> h1(120, 0., 1.2, 120, 0., 1.2)", fCuts, "colz");    
     fNormTree->Draw("det2 : det1 >> prof (100, 0., 1., 100, 0., 1.)", fCuts, "sameprof");    
     TProfile *p2D = (TProfile*)gPad->GetPrimitive("prof");
-    p2D->Fit("pol3", "", "", 0.0, 1.0);
+    p2D->Fit("pol3", "Q", "", 0.0, 1.0);
     fFitFunction = (TF1*) p2D->GetFunction("pol3");    
     std::cout << "Fitting done!" << std::endl;
 }
@@ -225,7 +225,7 @@ void CentralitySlicesFinder::FitCorrection ( int n_points )
 //         cout << "x = " << X4fit.at(i) << "       y = " << Y4fit.at(i) << endl;
     
     fCorrProfile = new TGraphErrors( X4fit.size(), &(X4fit[0]), &(Y4fit[0]), &(ErrorX[0]), &(ErrorY[0]));
-    fCorrProfile->Fit("pol5", "", "", 0.00, 1.0);
+    fCorrProfile->Fit("pol5", "Q", "", 0.00, 1.0);
     fCorrProfile->GetFunction("pol5")->SetLineWidth(2);
     fCorrProfile->GetFunction("pol5")->SetLineColor(1);
     fFitFunction = (TF1*) fCorrProfile->GetFunction("pol5");
@@ -491,10 +491,10 @@ void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
 
 //         cTemp->cd(4);
 //         hXY->Draw();
-        hB->Fit("gaus");
-        hX->Fit("gaus");
-        if (!is1DAnalisys)  hY->Fit("gaus");
-        if (!is1DAnalisys)  hXY->Fit("gaus");
+        hB->Fit("gaus", "Q");
+        hX->Fit("gaus", "Q");
+        if (!is1DAnalisys)  hY->Fit("gaus", "Q");
+        if (!is1DAnalisys)  hXY->Fit("gaus", "Q");
         
 //         gPad->Update();
         
@@ -755,8 +755,8 @@ void CentralitySlicesFinder::QA ()
         
         float ddd = TMath::Sqrt ( (temp_dsB/temp_B)*(temp_dsB/temp_B) + (temp_dsB/temp_B/temp_B*temp_dB)*(temp_dsB/temp_B/temp_B*temp_dB) );
         
-        cout << "d_sigma = " << (temp_dsB/temp_B) << endl;
-        cout << "d_b = " << (temp_dsB/temp_B/temp_B*temp_dB) << endl;
+//         cout << "d_sigma = " << (temp_dsB/temp_B) << endl;
+//         cout << "d_b = " << (temp_dsB/temp_B/temp_B*temp_dB) << endl;
         
         TempdB.push_back( ddd );
     }
