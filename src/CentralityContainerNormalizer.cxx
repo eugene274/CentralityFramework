@@ -78,7 +78,7 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     if ( fInFile->IsOpen() ) cout << "*** CentralityContainerNormalizer::LoadInputData ***  File opened successfully" << endl;
         
 //     fInTree = (TTree*) fInFile->Get("na61_data");    //TODO set Tree name as parameter
-    fInTree = (TTree*) fInFile->Get("cbm_data");    //TODO set Tree name as parameter
+    fInTree = (TTree*) fInFile->Get("container");    //TODO set Tree name as parameter
     fContainer = new CentralityEventContainer;
     fInTree->SetBranchAddress("CentralityEventContainer", &fContainer);   
     
