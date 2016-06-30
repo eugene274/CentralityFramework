@@ -99,7 +99,7 @@ std::vector <Float_t> NA61DataEventNew::SetPsdVector(Int_t subgroup)
     std::vector <Float_t> psdEnergies;
     DataTreePSDModule *PdsMod = new DataTreePSDModule;
     
-    if  (false/*fPsdGeomConfig == "CBM_44"*/){   //NOTE later can be used for NA61 ?
+    if  (false/*fPsdGeomConfig == "CBM_44"*/){   //NOTE later can be used for CBM ?
         
         std::vector <Int_t> PsdPos;
         if ( subgroup == 1 )
