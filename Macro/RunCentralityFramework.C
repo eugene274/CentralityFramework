@@ -6,31 +6,29 @@ void RunCentralityFramework()
     
     TString dir = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/";    
     
+    TString det0 = "M_{STS}";
     TString det1 = "E_{PSD}^{1}";
     TString det2 = "E_{PSD}^{2}";
     TString det3 = "E_{PSD}^{3}";
-    TString det4 = "M_{STS}";
     
 //     TString ContainerFile = dir + "root_files/" + "na61_container_merged_nocuts.root";
 //     TString ContainerFile = dir + "root_files/" + "na61_container_merged.root";
 //     TString ContainerFile = dir + "root_files/" + "na61_container_22912.root";
     
-    
-    
-    TString ContainerFile = dir + "root_files/DCM-QGSM/" + "sis100_STS_PSD_SC_OFF_SL_OFF_2016_04_11.root";
+    TString ContainerFile = dir + "containers/" + "cbm_urqmd_CC_1.root";
 //     TString ContainerFile = dir + "root_files/DCM-QGSM/" + "sis100_electron_SC_OFF_SL_OFF_urqmd.root";
     
-    TCut cuts = "det1 > 0.65 - det2";
+    TCut cuts = "";//"det1 > 0.65 - det2";
     
     CentralityManager *manager = new CentralityManager;
     manager->SetDirectory(dir);
      
 //  For CentralityFinder 
 //  ************************************   
+    manager->AddDetector(det0);  
     manager->AddDetector(det1);
     manager->AddDetector(det2);
     manager->AddDetector(det3);
-    manager->AddDetector(det4);  
 
 //     manager->AddDetector("PSD4");
 //     manager->AddDetector("PSD12");
@@ -41,11 +39,11 @@ void RunCentralityFramework()
 //     manager->CopyNa61ExpDataToContainer(na61datadir);
 //     manager->SetNormalization (733440);
     manager->IsSimData(true);
-    manager->Det1IsInt(false);
+    manager->Det1IsInt(true);
     manager->Do1DAnalisys(true);
-    manager->SetDetectorsForCentralityAnalisys (det1, det4);
-    manager->SetCentralityMax(60);
-    manager->SetDirectionCentralEvents(0);
+    manager->SetDetectorsForCentralityAnalisys (det0);
+    manager->SetCentralityMax(100);
+    manager->SetDirectionCentralEvents(1);
     manager->SetSliceStep (5);
     manager->SetCuts (cuts);
     
