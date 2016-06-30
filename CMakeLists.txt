@@ -39,16 +39,25 @@ set(INCLUDE
     Glauber/AliGlauberNucleon.h     
     Glauber/AliGlauberNucleus.h  
 
-    InputTree/DataTreeEvent.h
-    InputTree/DataTreeMCTrack.h
-    InputTree/DataTreePSDModule.h
-    InputTree/DataTreePSDSection.h
-    InputTree/DataTreeTrack.h
-    InputTree/DataTreeTOFSegment.h
-    InputTree/DataTreeV0Candidate.h    
-    InputTree/DataTreeTrigger.h
     InputTree/DataTreeBPD.h
-    )
+    InputTree/DataTreeConstants.h
+    InputTree/DataTreeConverterNA61.h
+    InputTree/DataTreeEvent.h
+#     InputTree/DataTreeMaker.h
+    InputTree/DataTreeMCTrack.h
+#     InputTree/DataTreePSDHit.h
+    InputTree/DataTreePSDModule.h
+#     InputTree/DataTreePSDModuleHit.h
+    InputTree/DataTreePSDSection.h
+#     InputTree/DataTreePSDSectionHit.h
+    InputTree/DataTreeSTSTrack.h
+    InputTree/DataTreeTOFHit.h
+    InputTree/DataTreeTrack.h
+    InputTree/DataTreeTrigger.h
+    InputTree/DataTreeV0Candidate.h    
+    
+#     config/ContConfig.C
+)
 
 ROOT_GENERATE_DICTIONARY(G__Centrality ${INCLUDE} LINKDEF EventLinkDef.h)
 
@@ -73,16 +82,19 @@ set(SOURCES
     Glauber/AliGlauberNucleon.cxx     
     Glauber/AliGlauberNucleus.cxx  
     
-    
+    InputTree/DataTreeBPD.cxx
+    InputTree/DataTreeConverterNA61.cxx
     InputTree/DataTreeEvent.cxx
+#     InputTree/DataTreeMaker.cxx
     InputTree/DataTreeMCTrack.cxx
     InputTree/DataTreePSDModule.cxx
     InputTree/DataTreePSDSection.cxx
+    InputTree/DataTreeSTSTrack.cxx
+    InputTree/DataTreeTOFHit.cxx
     InputTree/DataTreeTrack.cxx
-    InputTree/DataTreeTOFSegment.cxx
-    InputTree/DataTreeV0Candidate.cxx 
     InputTree/DataTreeTrigger.cxx
-    InputTree/DataTreeBPD.cxx
+    InputTree/DataTreeV0Candidate.cxx
+
     )
 
 
