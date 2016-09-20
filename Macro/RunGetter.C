@@ -16,12 +16,16 @@ void RunGetter()
 //     TString ContainerFile = dir + "root_files/" + "na61_container_22912.root";
 //     TString ContainerFile = dir + "root_files/DCM-QGSM/" + "sis100_electron_SC_OFF_SL_OFF_urqmd.root";
     TString ContainerFile = dir + "root_files/DCM-QGSM/" + "sis100_STS_PSD_SC_OFF_SL_OFF_2016_04_11.root";
+    TString ContainerFile = dir + "containers/" + "cbm_urqmd_CC_1.root";
     
-    TCut cuts =  "det1 > 0.65 - det2";
+    
+    TCut cuts =  "";//"det1 > 0.65 - det2";
     
     CentralityManager *manager = new CentralityManager;
     manager->SetDirectory(dir);
-     
+    manager->IsSimData(true);                               // write impact parameter value - true for CBM (mc simulations)
+    manager->Det1IsInt(true);                               // if multiplicity used as det1 - true; if as det2 - manager->Det2IsInt(true);
+
 //  For CentralityFinder 
 //  ************************************   
     manager->AddDetector(det1);
@@ -31,11 +35,11 @@ void RunGetter()
         
     float c = -1;
     
-//     dir += "root_files/urqmd/";
-//     TString SlicesFileName = dir + "Slices_M_{STS}_urqmd.root";
+    dir += "root_files/";
+    TString SlicesFileName = dir + "Slices_M_{STS}_.root";
 
-    dir += "root_files/dcm_qgsm_OFF_OFF/";
-    TString SlicesFileName = (dir + "Slices_E_{PSD}^{1}_dcmqgsm.root");
+//     dir += "root_files/dcm_qgsm_OFF_OFF/";
+//     TString SlicesFileName = (dir + "Slices_E_{PSD}^{1}_dcmqgsm.root");
     
     
     
@@ -46,7 +50,7 @@ void RunGetter()
     TFile *DataFile = new TFile ( ContainerFile, "read" );    
 
     CentralityEventContainer *container = new CentralityEventContainer;
-    TTree *ContTree = (TTree*)DataFile->Get("cbm_data");
+    TTree *ContTree = (TTree*)DataFile->Get("container");
     ContTree->SetBranchAddress("CentralityEventContainer", &container);
     
     TH1F *hCentr = new TH1F ("hCentr", "", 101, -1, 100);
@@ -86,41 +90,41 @@ void RunGetter()
 
     Int_t NSlices = fSlice->GetNSlices();
     
-    for (Int_t i=1; i<NSlices; i++)
-    {
-        std::cout << fSlice->GetXi(i)*fSlice->GetDet1Max() << std::endl;
-        gPad->Update();
-        Float_t x = fSlice->GetXi(i)*fSlice->GetDet1Max();
-        Double_t xr = gPad->GetX2()-gPad->GetX1();
-        double x1 = (x-gPad->GetX1()) / xr;
-        TLine l2;
-        l2.SetLineColor(11);
-        l2.DrawLineNDC(x1, 0.10, x1, 0.9);             
-    }
+//     for (Int_t i=1; i<NSlices; i++)
+//     {
+//         std::cout << fSlice->GetXi(i)*fSlice->GetDet1Max() << std::endl;
+//         gPad->Update();
+//         Float_t x = fSlice->GetXi(i)*fSlice->GetDet1Max();
+//         Double_t xr = gPad->GetX2()-gPad->GetX1();
+//         double x1 = (x-gPad->GetX1()) / xr;
+//         TLine l2;
+//         l2.SetLineColor(11);
+//         l2.DrawLineNDC(x1, 0.10, x1, 0.9);             
+//     }
     
     
 //     manager->GetCentralityGetter()->GetGlauberB();
     
-//     for (Int_t i=0; i<n; i++)
-//     {
-//         ContTree->GetEntry(i);
+    for (Int_t i=0; i<n; i++)
+    {
+        ContTree->GetEntry(i);
 //         if (RunId != container->GetRunId())
 //         {
 //             RunId = container->GetRunId();
 //             manager->SetGetterRunId (RunId);
 //         }
-//         
-//         PSD1 = container->GetDetectorWeight(0);
-//         PSD2 = container->GetDetectorWeight(1);
-//         PSD3 = container->GetDetectorWeight(2);
-//         M = container->GetDetectorWeight(3);
-// 
-//         Centrality = manager->GetCentrality (M, PSD1);
-//         hCentr->Fill(Centrality);
-//         
-//     }
-//     
-//     hCentr->Draw();
+        
+        PSD1 = container->GetDetectorWeight(1);
+        PSD2 = container->GetDetectorWeight(2);
+        PSD3 = container->GetDetectorWeight(3);
+        M = container->GetDetectorWeight(0);
+
+        Centrality = manager->GetCentrality (M);
+        hCentr->Fill(Centrality);
+        
+    }
+    
+    hCentr->Draw();
 
     
 }
