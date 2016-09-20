@@ -56,7 +56,7 @@ void TreeInterface::WriteCentralityContainer ()
         
         if (!isSelectedEvent (fEvent)) continue;
         
-        int nTracks_Ref = ContConfig(fEvent);
+        int nTracks_Ref = GetRefMultiplicity(fEvent);
                 
         std::vector <float> psd1 = SetPsdVector(1);
         std::vector <float> psd2 = SetPsdVector(2);
