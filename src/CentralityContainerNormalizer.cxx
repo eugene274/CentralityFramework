@@ -81,26 +81,26 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     fInTree = (TTree*) fInFile->Get("container");    //TODO set Tree name as parameter
     fContainer = new CentralityEventContainer;
     fInTree->SetBranchAddress("CentralityEventContainer", &fContainer);   
-    
-    GetMaximum (Det1Id, Det2Id);
-    RunByRunCorrection (Det1Id, Det2Id);
-            
-    if (Det2Id != -1) GetNormalization (Det1Id, Det2Id);
-        else          GetNormalization (Det1Id);
-    
     TRandom* random = new TRandom;
     random->SetSeed();
     Float_t rand1 = 0, rand2 = 0;
-
     Int_t nTotalEvents = fInTree->GetEntries();
+    
+    
+    
+    GetMaximum (Det1Id, Det2Id);
+    if (!fIsSimData)    RunByRunCorrection (Det1Id, Det2Id);
+            
+    if (Det2Id != -1) GetNormalization (Det1Id, Det2Id);
+        else          GetNormalization (Det1Id);
 
     fInTree->GetEntry(0);
     Int_t RunId = fContainer->GetRunId();
     Float_t NormFactor = 1.;
     Int_t IterRunId = 0;
-    Float_t NormFactor1 = fDet1NormVec.at(IterRunId);
+    Float_t NormFactor1 = fIsSimData ? 1.0 :  fDet1NormVec.at(IterRunId);
     Float_t NormFactor2;
-    if (Det2Id != -1) NormFactor2 = fDet2NormVec.at(IterRunId);
+    if (Det2Id != -1) NormFactor2 = fIsSimData ? 1.0 : fDet2NormVec.at(IterRunId);
 
     std::cout << "Normalizing and applying run-by-run corrections..." << std::endl;
     
@@ -127,8 +127,8 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
             std::cout << "NormFactor for run # " << RunId <<  ", det1 = " << NormFactor1;
             if (Det2Id != -1)  std::cout << " , det2 = " << NormFactor2;
             std::cout << std::endl;
-            NormFactor1 = fDet1NormVec.at(IterRunId);
-            if (Det2Id != -1)  NormFactor2 = fDet2NormVec.at(IterRunId);
+            NormFactor1 = fIsSimData ? 1.0 :  fDet1NormVec.at(IterRunId);
+            if (Det2Id != -1)  NormFactor2 = fIsSimData ? 1.0 : fDet2NormVec.at(IterRunId);
             RunId = fContainer->GetRunId();
         }
         det1 = NormFactor1*fContainer->GetDetectorWeight(Det1Id)/det1max;
