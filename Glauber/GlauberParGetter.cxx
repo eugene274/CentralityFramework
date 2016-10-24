@@ -47,13 +47,23 @@ void GlauberParGetter::DrawHistos (Bool_t isSim, Bool_t isData, Bool_t isGlauber
 
 void GlauberParGetter::GetBHisto (Float_t MultMin,  Float_t MultMax, TH1F *hB, Int_t n)
 {
-    fF = 0.783333;
-    fMu = 0.669471;
-    fK = 11.6558 ;
+//     fF = 0.783333;
+//     fMu = 0.669471;
+//     fK = 11.6558 ;
 
-//     fF = 0.716667;
-//     fMu = 0.632764;
-//     fK = 3.56745 ;
+//     fF = 0.8;
+//     fMu = 0.304777;
+//     fK = 0.751315 ;
+
+//  f = 1 mu = 0.879211 k = 144 sigma = 1.21 chi2 = 2.38872
+    
+    
+    fF =  1;
+    fMu = 0.879211;
+    fK = 144 ;
+
+// f = 0.75    mu = 0.404777    k = 66.8897
+
 
     Float_t Na;    
     SetNBDhist(fMu, fK);

@@ -123,9 +123,10 @@ void CentralitySlicesFinder::LoadInputData (Int_t Det1Id, Int_t Det2Id)
 
 void CentralitySlicesFinder::Fit2DCorrelation ()
 {
+    fCanvas->cd(0);
     std::cout << "Fitting 2D Correlation..." << std::endl;
-    fNormTree->Draw( "det2 : det1  >> h1(120, 0., 1.2, 120, 0., 1.2)", fCuts, "colz");    
-    fNormTree->Draw("det2 : det1 >> prof (100, 0., 1., 100, 0., 1.)", fCuts, "sameprof");    
+//     fNormTree->Draw( "det2 : det1  >> h1(120, 0., 1.2, 120, 0., 1.2)", fCuts, "colz");    
+    fNormTree->Draw("det2 : det1 >> prof (100, 0., 1., 100, 0., 1.)", fCuts, "prof");    
     TProfile *p2D = (TProfile*)gPad->GetPrimitive("prof");
     p2D->Fit("pol3", "Q", "", 0.0, 1.0);
     fFitFunction = (TF1*) p2D->GetFunction("pol3");    
@@ -136,7 +137,7 @@ void CentralitySlicesFinder::FitCorrection ( int n_points )
 {
 //     TCanvas *c1 = new TCanvas("c1", "canvas", 1000, 600);
     std::cout << "Starting fit correction..." << std::endl;
-
+    fCanvas->cd(0);
     std::vector <double> X4fit;
     std::vector <double> Y4fit;
     std::vector <double> ErrorX;
@@ -148,7 +149,7 @@ void CentralitySlicesFinder::FitCorrection ( int n_points )
     
     double width = 0.02;
     double kb[2];
-    fNormTree->Draw( "det2 : det1  >> h1(120, 0., 1.2, 120, 0., 1.2)", fCuts, "colz");
+//     fNormTree->Draw( "det2 : det1  >> h1(120, 0., 1.2, 120, 0., 1.2)", fCuts, "colz");
 
     for (int i=0; i<n_points; i++)
     {
@@ -229,6 +230,12 @@ void CentralitySlicesFinder::FitCorrection ( int n_points )
     fCorrProfile->GetFunction("pol5")->SetLineWidth(2);
     fCorrProfile->GetFunction("pol5")->SetLineColor(1);
     fFitFunction = (TF1*) fCorrProfile->GetFunction("pol5");
+    fCorrProfile->Draw("same");
+    gPad->Update();
+    
+    fCanvas->Print( CFdir + "QA/11111.pdf");    
+    fCanvas->Print( CFdir + "QA/11111.root");    
+    
     
     std::cout << "Fit correction done!" << std::endl;
 }
@@ -246,7 +253,7 @@ void CentralitySlicesFinder::FindCentralitySlices ( )
     if (!is1DAnalisys)  distrName = Form("%s_%s_centrality_QA", fDet1Name.Data(), fDet2Name.Data() );
     else                distrName = Form("%s_centrality_QA", fDet1Name.Data() );
         
-    TCanvas *c1 = new TCanvas("c1", "canvas", 1500, 900);
+    fCanvas = new TCanvas("fCanvas", "canvas", 1500, 900);
 
     if (!is1DAnalisys) Fit2DCorrelation ();    
     if (!is1DAnalisys) FitCorrection (50);   
@@ -254,15 +261,13 @@ void CentralitySlicesFinder::FindCentralitySlices ( )
     if (is1DAnalisys)
     {
         fNormTree->Draw( "det1 >> h1(120, 0., 1.1)", fCuts);        
-        c1->SetLogy();
+        fCanvas->SetLogy();
     }
     
     FindSlices ();    
 
     /*if (!is1DAnalisys)  */FindMeanSignalsInSlice();
     
-//     c1->Print( CFdir + "QA/" + distrName + ".pdf");    
-//     c1->Print( CFdir + "QA/" + distrName + ".root");    
     
     
 //     fSlicesFile = new TFile ( Form(CFdir + "root_files/Slices_%s_%s_%d.root", fDet1Name.Data(), fDet2Name.Data(), RunId ) , "RECREATE");
@@ -429,20 +434,13 @@ void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
             tempk = -1/fSlice->GetBi(i-1);
             tempb = fSlice->GetAi(i-1) + fSlice->GetXi(i-1)*(fSlice->GetBi(i-1) - tempk);  
         }
-//         float tempD = TMath::Sqrt( 1 + tempk*tempk);
-//         TCut Dist1 = Form ( " abs((%s*%f - %s + %f)/%f) < %f", par1.Data(), tempk, par2.Data(), tempb, tempD, cutWidth );
-        
         TCut isInside = RightOfNorm && LeftOfNorm;        
                 
         fNormTree->Draw(">>elist", fCuts && isInside);
         TEventList *insideList = (TEventList*)gDirectory->Get("elist");
         
         int nInside = insideList->GetN();
-        
-//         std::vector <double> X(nInside);
-//         std::vector <double> Y(nInside);    
-//         std::vector <double> XY(nInside);                   
-//         std::vector <double> B(nInside);
+
 
         TH1F *hX  = new TH1F ("hX",  "hX",  100, 0, 1);
         TH1F *hY  = new TH1F ("hY",  "hY",  100, 0, 1);
@@ -458,40 +456,15 @@ void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
         {
             fNormTree->GetEntry(insideList->GetEntry(k));
 
-//             X.at(k) = det1;
-//             Y.at(k) = det2;
-//             B.at(k) = fB; 
-//             XY.at(k) = ( X.at(k)*tempk - Y.at(k) + tempb) / TMath::Sqrt( 1 + tempk*tempk);  
-//         std::cout << "fill b = " << fB << std::endl;
-
-            hB->Fill(fB);
+            if (fIsSimData)   hB->Fill(fB);
             hX->Fill(det1);
             if (!is1DAnalisys)  hY->Fill(det2);
             if (!is1DAnalisys)  hXY->Fill(( det1*tempk - det2 + tempb) / TMath::Sqrt( 1 + tempk*tempk));
 
-//             meanB     += B.at(k);
-//             meanParX  += X.at(k);
-//             meanParY  += Y.at(k);
-//             meanParXY += XY.at(k); 
-//             nn++;
             
         }
         
-//         TCanvas *cTemp = new TCanvas ("cTemp", "cTemp", 800, 600);
-//         cTemp->Divide(2,2);
-        
-//         cTemp->cd(1);
-//         hB->Draw();
-        
-//         cTemp->cd(2);
-//         hX->Draw();
-
-//         cTemp->cd(3);
-//         hY->Draw();
-
-//         cTemp->cd(4);
-//         hXY->Draw();
-        hB->Fit("gaus", "Q");
+        if (fIsSimData)   hB->Fit("gaus", "Q");
         hX->Fit("gaus", "Q");
         if (!is1DAnalisys)  hY->Fit("gaus", "Q");
         if (!is1DAnalisys)  hXY->Fit("gaus", "Q");
@@ -499,56 +472,25 @@ void CentralitySlicesFinder::FindMeanSignalsInSlice ( void )
 //         gPad->Update();
         
 //         std::cin >> meanB;
-        TF1 *fYfit;
-        TF1 *fBfit = hB->GetFunction("gaus");
+        TF1 *fYfit, *fBfit;
         TF1 *fXfit = hX->GetFunction("gaus");
         if (!is1DAnalisys)   fYfit = hY->GetFunction("gaus");
-
-        meanB    = fBfit->GetParameter(1);      sigmaB    = fBfit->GetParameter(2);
+        if (fIsSimData)   fBfit = hB->GetFunction("gaus");
+        
+        if (fIsSimData)   meanB    = fBfit->GetParameter(1);      sigmaB    = fBfit->GetParameter(2);
         meanParX = fXfit->GetParameter(1);      sigmaParX = fXfit->GetParameter(2);
         if (!is1DAnalisys)   { meanParY = fYfit->GetParameter(1);      sigmaParY = fYfit->GetParameter(2); }
         
-        dsigmaB = fBfit->GetParError(2);
-        dB = fBfit->GetParError(1);
+        if (fIsSimData)   dsigmaB = fBfit->GetParError(2);
+        if (fIsSimData)   dB = fBfit->GetParError(1);
         
-//         cout << fBfit->GetParameter(0) << endl;
-//         cout << fBfit->GetParameter(1) << endl;        
-//         cout << fBfit->GetParameter(2) << endl;        
-        
-                
         cout << "   Events inside slice = " << nInside << endl;
-       
-//         if (nn > 0){
-//             meanB     /= nn;
-//             meanParX  /= nn;
-//             meanParY  /= nn;
-//             meanParXY /= nn;        
-//         }
-//         else continue;
-        
-        
-//         for (int k=0; k<nInside; k++)
-//         {
-//             sigmaB     += TMath::Power(B.at(k) - meanB, 2);
-//             sigmaParX  += TMath::Power(X.at(k) - meanParX, 2);
-//             sigmaParY  += TMath::Power(Y.at(k) - meanParY, 2);
-//             sigmaParXY += TMath::Power(XY.at(k) - meanParXY, 2);
-//             meanParXY3 += TMath::Power(XY.at(k) - meanParXY, 3);
-//             
-//         }
-
-//         sigmaB = TMath::Power(sigmaB/nn, 0.5);
-//         sigmaParX = TMath::Power(sigmaParX/nn, 0.5);
-//         sigmaParY = TMath::Power(sigmaParY/nn, 0.5);
-//         sigmaParXY = TMath::Power(sigmaParXY/nn, 0.5);
-//         meanParXY3 = meanParXY3/nn/TMath::Power(sigmaParXY, 3);
-
         
         fSlice->AddXPar (meanParX, sigmaParX);
         fSlice->AddYPar (meanParY, sigmaParY);
         fSlice->AddXYPar (meanParXY, sigmaParXY);
         fSlice->AddXY3 (meanParXY3);
-        fSlice->AddB (meanB, sigmaB, dB, dsigmaB);
+        if (fIsSimData)   fSlice->AddB (meanB, sigmaB, dB, dsigmaB);
         
         hX  ->Delete();
         hY  ->Delete();
@@ -607,7 +549,7 @@ void CentralitySlicesFinder::QA ()
     TCanvas *c1 = new TCanvas("c1", "canvas", 1500, 900);
     c1->Divide (2, 2);
 
-
+    TFile *fOutQAFile = new TFile ( Form(CFdir + "root_files/QA_%s_%s.root", fDet1Name.Data(), fDet2Name.Data() ), "RECREATE" );
 
 // ***************************** Run-by-run QA *****************************
     c1->cd(1);
@@ -622,7 +564,8 @@ void CentralitySlicesFinder::QA ()
     gr1->GetYaxis()->SetRangeUser(0.9, 1.1);
  
     gr1->Draw("APL");
-
+    
+    
     if (fDet2Id != -1){ 
         TGraph *gr2 = new TGraph (Int_t(fRunIdVec.size()), &(TempVec[0]), &(fDet2NormVec[0]) );
         gr1->GetYaxis()->SetTitle(  Form ( "signal^{run}/<signal>" ) );    
@@ -640,18 +583,15 @@ void CentralitySlicesFinder::QA ()
 // **************************************************************************
     
 // ******************************* Slices QA ********************************
-    c1->cd(2);    
+    TCanvas *c2 = new TCanvas("c2", "canvas", 800, 600);
     std::vector <Float_t> centrality;
     Float_t step = fSlice->GetSlicesStep ();
     UInt_t NSlices = fSlice->GetNSlices();
-    
-    for (UInt_t i=0; i<NSlices; i++)
-        centrality.push_back( (i+0.5)*step );
             
     if (!is1DAnalisys)
     {
-        fNormTree->Draw( "det2 : det1  >> h1(1200, 0., 1.2, 1200, 0., 1.2)", fCuts, "colz");
-        TH2F *h1 = (TH2F*)gPad->GetPrimitive("h1");
+        fNormTree->Draw( "det2 : det1  >> h0(1200, 0., 1.2, 1200, 0., 1.2)", fCuts, "colz");
+        TH2F *h1 = (TH2F*)gPad->GetPrimitive("h0");
         
         fFitFunction->SetLineColor(kRed);
 
@@ -689,6 +629,10 @@ void CentralitySlicesFinder::QA ()
         leg1->Draw("same");    
         gPad->Update();
         
+        h1->Write();
+        p2D->Write();
+        fCorrProfile->Write();
+        c2->Write();
     }
     else
     {
@@ -708,8 +652,18 @@ void CentralitySlicesFinder::QA ()
             l2.SetLineColor(kRed);
             l2.DrawLineNDC(x1, 0.10, x1, 0.9);             
         }
+        h1->Write();
+        c2->Write();
     }
 // **************************************************************************
+
+
+    if (NSlices == 19) NSlices++;
+    
+    
+    for (UInt_t i=0; i<NSlices; i++)
+        centrality.push_back( (i+0.5)*step );
+
 
     c1->cd(3);
     TGraphErrors *grX = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanX()[0]), 0, &(fSlice->GetSigmaX()[0]));
@@ -736,39 +690,53 @@ void CentralitySlicesFinder::QA ()
         TLegend* leg2 = new TLegend(0.7,0.8,0.9,0.9);
         leg2->AddEntry(grX, fDet1Name.Data(), "p");            
         leg2->AddEntry(grY, fDet2Name.Data(), "p");    
-        leg2->Draw("same");     
-    }
-    
-    
-    
-    c1->cd(4);
-    gPad->SetLogy();
-    std::vector <Float_t> TempVecB, TempdB;
-    for (UInt_t j=0; j<NSlices; j++){
-        
-        float temp_dB = fSlice->GetdB().at(j);
-        float temp_B = fSlice->GetMeanB().at(j);
-        float temp_sB = fSlice->GetSigmaB().at(j);
-        float temp_dsB = fSlice->GetdSigmaB().at(j);
-        
-        TempVecB.push_back(temp_sB/temp_B);
-        
-        float ddd = TMath::Sqrt ( (temp_dsB/temp_B)*(temp_dsB/temp_B) + (temp_dsB/temp_B/temp_B*temp_dB)*(temp_dsB/temp_B/temp_B*temp_dB) );
-        
-//         cout << "d_sigma = " << (temp_dsB/temp_B) << endl;
-//         cout << "d_b = " << (temp_dsB/temp_B/temp_B*temp_dB) << endl;
-        
-        TempdB.push_back( ddd );
-    }
+        leg2->Draw("same");    
+        grY->Write();
 
-    TGraphErrors *grB = new TGraphErrors (NSlices, &(centrality[0]), &(TempVecB[0]), 0, &(TempdB[0]));
-    grB->SetMarkerStyle(23);    
-    grB->GetXaxis()->SetTitle( "Centrality" );
-    grB->GetYaxis()->SetTitle( "sigma_{B}/<B>" );    
-    grB->GetYaxis()->SetRangeUser(0.05, 0.5);
-      
-    grB->Draw("APL");
+    }
+    grX->Write();
+
     
+    if (fIsSimData){
+        c1->cd(4);
+        gPad->SetLogy();
+        std::vector <Float_t> TempVecB, TempdB;
+        for (UInt_t j=0; j<NSlices; j++){
+            
+            float temp_dB = fSlice->GetdB().at(j);
+            float temp_B = fSlice->GetMeanB().at(j);
+            float temp_sB = fSlice->GetSigmaB().at(j);
+            float temp_dsB = fSlice->GetdSigmaB().at(j);
+            
+            TempVecB.push_back(temp_sB/temp_B);
+            
+            float ddd = TMath::Sqrt ( (temp_dsB/temp_B)*(temp_dsB/temp_B) + (temp_dsB/temp_B/temp_B*temp_dB)*(temp_dsB/temp_B/temp_B*temp_dB) );
+            
+    //         cout << "d_sigma = " << (temp_dsB/temp_B) << endl;
+    //         cout << "d_b = " << (temp_dsB/temp_B/temp_B*temp_dB) << endl;
+            
+            TempdB.push_back( ddd );
+        }
+
+        TGraphErrors *grB = new TGraphErrors (NSlices, &(centrality[0]), &(TempVecB[0]), 0, &(TempdB[0]));
+        grB->SetMarkerStyle(23);    
+        grB->GetXaxis()->SetTitle( "Centrality" );
+        grB->GetYaxis()->SetTitle( "#sigma_{b}/<b>" );    
+        grB->GetYaxis()->SetRangeUser(0.05, 0.5);
+        gPad->SetLogy();
+        grB->Draw("APL");
+        grB->Write();
+
+        TGraphErrors *grB1 = new TGraphErrors (NSlices, &(centrality[0]), &(fSlice->GetMeanB()[0]), 0, &(fSlice->GetSigmaB()[0]));
+        grB1->SetMarkerStyle(23);    
+        grB1->GetXaxis()->SetTitle( "Centrality" );
+        grB1->GetYaxis()->SetTitle( "<b>" );    
+        grB1->GetYaxis()->SetRangeUser(0.0, 17);
+        
+        grB1->Write();
+        
+        
+    }
 //     c1->cd(3);
 //     
 //     TGraphErrors *grXY = new TGraphErrors(NSlices, &(centrality[0]), &(fSlice->GetMeanXY()[0]), 0, &(fSlice->GetSigmaXY()[0]));
@@ -794,6 +762,10 @@ void CentralitySlicesFinder::QA ()
     TString filename = Form(CFdir + "QA/QA_%s_%s", fDet1Name.Data(), fDet2Name.Data() );
     c1->Print( filename + ".pdf" );    
     c1->Print( filename + ".root" );    
+    
+    c1->Write();
+    
+    fOutQAFile->Close();
     
     std::cout << "QA saved!" << std::endl;
 //     TGraph g(a.size(), &(a[0]), &(b[0]));

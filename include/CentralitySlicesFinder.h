@@ -10,6 +10,7 @@
 #include "TMath.h"
 #include "TNamed.h"
 #include "TGraphErrors.h"
+#include "TCanvas.h"
 
 #include "CentralityEventContainer.h"
 #include "CentralitySlice.h"
@@ -113,7 +114,7 @@ class CentralitySlicesFinder  : public TNamed
         TF1             *fFitFunction;
         Float_t         det1max, det2max;
         TGraphErrors    *fCorrProfile;
-        
+        TCanvas         *fCanvas;
         Float_t         det1, det2, fB;
 
         static const int n_par = 4;      //TODO make params

@@ -13,7 +13,7 @@
 
 # Execute application code
 
-source /lustre/nyx/cbm/users/klochkov/cbmroot/24_03_2016/build/config.sh
+source /lustre/nyx/cbm/users/klochkov/cbmroot/22_08_2016/build/config.sh
 
 currentDir=`pwd`
 echo "current dir:" $currentDir

@@ -23,12 +23,9 @@ class TreeInterface : public TNamed
     
     void WriteCentralityContainer();
 
-    bool isGoodEvent(Int_t nTPC_Tracks_Ref);
-    bool isRefMultTrack(int iTrk);
-
     void SetOutFileName (TString OutFileName) {fOutFileName = OutFileName;}
     void SetInFileName  (TString InFileName)  {fInFileName = InFileName;}
-    
+    void SetNEntries (int n) { nEntries = n; }
 private:
     Float_t Beam_Eta;
     TString fOutFileName;
@@ -42,6 +39,8 @@ private:
     CentralityEventContainer *fContainer;
     
     TString fPsdGeomConfig;
+    
+    Int_t nEntries;
     
     ClassDef(TreeInterface, 2);
 

@@ -9,21 +9,21 @@ void RunGetter()
     TString det1 = "E_{PSD}^{1}";
     TString det2 = "E_{PSD}^{2}";
     TString det3 = "E_{PSD}^{3}";
-    TString det4 = "M_{STS}";
+    TString det4 = "M_{TPC}";
     
 //     TString ContainerFile = dir + "root_files/" + "na61_container_merged_nocuts.root";
 //     TString ContainerFile = dir + "root_files/" + "na61_container_merged.root";
-//     TString ContainerFile = dir + "root_files/" + "na61_container_22912.root";
+    TString ContainerFile = dir + "root_files/na61_cont/" + "na61_container_merged.root";
 //     TString ContainerFile = dir + "root_files/DCM-QGSM/" + "sis100_electron_SC_OFF_SL_OFF_urqmd.root";
-    TString ContainerFile = dir + "root_files/DCM-QGSM/" + "sis100_STS_PSD_SC_OFF_SL_OFF_2016_04_11.root";
-    TString ContainerFile = dir + "containers/" + "cbm_urqmd_CC_1.root";
+//     TString ContainerFile = dir + "root_files/DCM-QGSM/" + "sis100_STS_PSD_SC_OFF_SL_OFF_2016_04_11.root";
+//     TString ContainerFile = dir + "containers/" + "cbm_urqmd_CC_1.root";
     
     
     TCut cuts =  "";//"det1 > 0.65 - det2";
     
     CentralityManager *manager = new CentralityManager;
     manager->SetDirectory(dir);
-    manager->IsSimData(true);                               // write impact parameter value - true for CBM (mc simulations)
+    manager->IsSimData(false);                               // write impact parameter value - true for CBM (mc simulations)
     manager->Det1IsInt(true);                               // if multiplicity used as det1 - true; if as det2 - manager->Det2IsInt(true);
 
 //  For CentralityFinder 
@@ -36,7 +36,7 @@ void RunGetter()
     float c = -1;
     
     dir += "root_files/";
-    TString SlicesFileName = dir + "Slices_M_{STS}_.root";
+    TString SlicesFileName = dir + Form ("Slices_%s_.root", det4.Data() );
 
 //     dir += "root_files/dcm_qgsm_OFF_OFF/";
 //     TString SlicesFileName = (dir + "Slices_E_{PSD}^{1}_dcmqgsm.root");
@@ -50,7 +50,9 @@ void RunGetter()
     TFile *DataFile = new TFile ( ContainerFile, "read" );    
 
     CentralityEventContainer *container = new CentralityEventContainer;
-    TTree *ContTree = (TTree*)DataFile->Get("container");
+//     TTree *ContTree = (TTree*)DataFile->Get("container");
+//     TTree *ContTree = (TTree*)DataFile->Get("na61_data");
+    TTree *ContTree = (TTree*)DataFile->Get("cbm_data");
     ContTree->SetBranchAddress("CentralityEventContainer", &container);
     
     TH1F *hCentr = new TH1F ("hCentr", "", 101, -1, 100);
@@ -103,28 +105,28 @@ void RunGetter()
 //     }
     
     
-//     manager->GetCentralityGetter()->GetGlauberB();
+    manager->GetCentralityGetter()->GetGlauberB();
     
-    for (Int_t i=0; i<n; i++)
-    {
-        ContTree->GetEntry(i);
-//         if (RunId != container->GetRunId())
-//         {
-//             RunId = container->GetRunId();
-//             manager->SetGetterRunId (RunId);
-//         }
-        
-        PSD1 = container->GetDetectorWeight(1);
-        PSD2 = container->GetDetectorWeight(2);
-        PSD3 = container->GetDetectorWeight(3);
-        M = container->GetDetectorWeight(0);
-
-        Centrality = manager->GetCentrality (M);
-        hCentr->Fill(Centrality);
-        
-    }
+//     for (Int_t i=0; i<n; i++)
+//     {
+//         ContTree->GetEntry(i);
+// //         if (RunId != container->GetRunId())
+// //         {
+// //             RunId = container->GetRunId();
+// //             manager->SetGetterRunId (RunId);
+// //         }
+//         
+//         PSD1 = container->GetDetectorWeight(1);
+//         PSD2 = container->GetDetectorWeight(2);
+//         PSD3 = container->GetDetectorWeight(3);
+//         M = container->GetDetectorWeight(0);
+// 
+//         Centrality = manager->GetCentrality (container->GetDetectorWeight(0));
+//         hCentr->Fill(Centrality);
+//         
+//     }
     
-    hCentr->Draw();
+//     hCentr->Draw();
 
     
 }

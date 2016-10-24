@@ -12,7 +12,8 @@ using std::flush;
 TreeInterface::TreeInterface() 
   : TNamed(),
     fEvent (new DataTreeEvent),
-    fPsdGeomConfig ("CBM_44")
+    fPsdGeomConfig ("CBM_44"),
+    nEntries (0)
 {
 }
 
@@ -28,29 +29,37 @@ void TreeInterface::WriteCentralityContainer ()
     CentralityDetectorEvent psd; 
     CentralityDetectorEvent tpc ; 
     
-//     if (fPsdGeomConfig == "CBM_44"){
+    if (fPsdGeomConfig == "CBM_44"){
     
         if (true) { fContainer->AddDetector(psd); }
         if (true) { fContainer->AddDetector(psd); }
         if (true) { fContainer->AddDetector(psd); }
-//         if (true) { fContainer->AddDetector(psd); }
-//         if (true) { fContainer->AddDetector(psd); }
-//         if (true) { fContainer->AddDetector(psd); }
         if (true) { fContainer->AddDetector(tpc);  }
-//     }
+    }
     
+    else if (fPsdGeomConfig == "NA61"){
+    
+        if (true) { fContainer->AddDetector(psd); }
+        if (true) { fContainer->AddDetector(psd); }
+        if (true) { fContainer->AddDetector(psd); }
+        if (true) { fContainer->AddDetector(psd); }
+        if (true) { fContainer->AddDetector(psd); }
+        if (true) { fContainer->AddDetector(psd); }
+        if (true) { fContainer->AddDetector(tpc);  }
+    } 
+            
     fOutFile = new TFile (fOutFileName.Data(), "recreate");    
     fOutTree = new TTree ( "container", "container" );
     fOutTree->Branch("CentralityEventContainer", "CentralityEventContainer", &fContainer);
     fOutTree->SetDirectory(0);  
     
-    Int_t nEntries = fInTree->GetEntries();
+    if (!nEntries) nEntries = fInTree->GetEntries();
     
     cout << "Reading " << nEntries << " events from chain..." << endl;
     for (Int_t iEntry = 0; iEntry<nEntries; iEntry++)
     {
         
-        if ((iEntry+1) % 50 == 0) cout << "Event # " << iEntry+1 << "... \r" << flush; 
+        if ((iEntry+1) % 100 == 0) cout << "Event # " << iEntry+1 << "... \r" << flush; 
         
         fInTree->GetEntry (iEntry);
         
@@ -79,7 +88,9 @@ void TreeInterface::WriteCentralityContainer ()
     cout << "Writing centrility container..." << endl;
     fOutTree->Write();
     fOutFile->Close();
-    cout << "Done! Centrality container " <<  fOutFileName <<  " created!" << endl;}
+    cout << "Done! Centrality container " <<  fOutFileName <<  " created!" << endl;
+    
+}
 
 std::vector <Float_t> TreeInterface::SetPsdVector(Int_t subgroup)
 {
@@ -87,7 +98,7 @@ std::vector <Float_t> TreeInterface::SetPsdVector(Int_t subgroup)
     std::vector <Float_t> psdEnergies;
     DataTreePSDModule *PdsMod = new DataTreePSDModule;
     
-    if  (fPsdGeomConfig == "CBM_44"){   //NOTE later can be used for CBM ?
+    if  (fPsdGeomConfig == "CBM_44"){   //NOTE later can be used for NA61 ?
         
         std::vector <Int_t> PsdPos;
         if ( subgroup == 1 )
@@ -139,28 +150,5 @@ std::vector <Float_t> TreeInterface::SetPsdVector(Int_t subgroup)
     return psdEnergies;
 }
 
-
-bool TreeInterface::isRefMultTrack(int iTrk)
-{
-    Float_t Beam_eta = 2.0792;
-    DataTreeTrack* track = fEvent->GetTrack(iTrk);
-    if (track->GetEta(0) < Beam_eta - 0.5 || track->GetEta(0) > Beam_eta + 0.5) return false;
-    if (track->GetNofHits(0,1) > 72 || track->GetNofHits(0,2) > 72 || track->GetNofHits(0,3) > 89) return false;
-    if (track->GetDCAComponent(0,0) > 2 || track->GetDCAComponent(0,1) > 2) return false;
-    if (TMath::Sqrt(TMath::Power(track->GetDCAComponent(0,0),2)+TMath::Power(track->GetDCAComponent(0,1),2)) > 2) return false;
-    if (track->GetNofHits(0,1) < 6 && track->GetNofHits(0,2) < 10 && track->GetNofHits(0,3) < 6) return false;
-    return true;
-}
-
-bool TreeInterface::isGoodEvent(Int_t nTPC_Tracks_Ref)
-{
-    Float_t fPSD_Energy_Total = fEvent->GetPSDEnergy();
-    if (fEvent->GetVertexPositionComponent(2) > -584.5 || fEvent->GetVertexPositionComponent(2) < -589) return false;
-    if (nTPC_Tracks_Ref < 0) return false;
-//     if (fPSD_Energy_Total < 1200 || fPSD_Energy_Total > 6000) return false;   //TODO check
-    if (fEvent->GetTrigger(7)->GetSignal() != 1) return false;
-    if (fPSD_Energy_Total  < 4500 - nTPC_Tracks_Ref*(4500.-1200.)/180.) return false;  //TODO check
-    return true;
-}
 
 

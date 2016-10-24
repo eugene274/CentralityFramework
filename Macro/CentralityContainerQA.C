@@ -1,8 +1,8 @@
 
-int CentralityContainerQA (TString DataFileName, Int_t max = 30)
+int CentralityContainerQA (TString DataFileName)
 {
     TString CentralityFrameworkDir = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/";
-    
+    gStyle->SetOptStat(0000);    
     gSystem->Load( CentralityFrameworkDir + "build/libCentrality");    
         
     TFile *DataFile = new TFile ( DataFileName, "read" );    
@@ -36,12 +36,16 @@ int CentralityContainerQA (TString DataFileName, Int_t max = 30)
     
     UInt_t nHisto = SHisto.size();
 
-    for (Int_t i=0; i<nHisto; i++)
-    {
-        c1->cd(i+1);
-        ContTree->Draw(SHisto.at(i), psd1_mult, "colz");
-        gPad->SetLogz();
-    }
+//     for (Int_t i=0; i<nHisto; i++)
+//     {
+//         c1->cd(i+1);
+//         ContTree->Draw(SHisto.at(i), psd1_mult, "colz");
+//         gPad->SetLogz();
+//     }
+    
+    TCanvas *c2 = new TCanvas("c2", "canvas2", 1500, 800);
+    ContTree->Draw ( "CentralityEventContainer.GetB() : CentralityEventContainer.GetDetectorWeight(3) >> h5(450, 0, 450, 500, 0, 18", "", "colz");
+    gPad->SetLogz();
     
     
     return 0;     

@@ -76,9 +76,11 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     }
     
     if ( fInFile->IsOpen() ) cout << "*** CentralityContainerNormalizer::LoadInputData ***  File opened successfully" << endl;
-        
-//     fInTree = (TTree*) fInFile->Get("na61_data");    //TODO set Tree name as parameter
-    fInTree = (TTree*) fInFile->Get("container");    //TODO set Tree name as parameter
+     
+    if (!fIsSimData)
+        fInTree = (TTree*) fInFile->Get("na61_data");    //TODO set Tree name as parameter
+    else
+        fInTree = (TTree*) fInFile->Get("cbm_data");    //TODO set Tree name as parameter
     fContainer = new CentralityEventContainer;
     fInTree->SetBranchAddress("CentralityEventContainer", &fContainer);   
     TRandom* random = new TRandom;
@@ -150,7 +152,7 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
 
 //     h1NotCorr->Draw();
 //     h1Corr   ->Draw("same");
-//     h1Corr   ->SaveAs("hTPC_ref.root");
+    h1Corr   ->SaveAs("hTPC_ref.root");
     
 //     c2->Print( CFdir + "QA/norm.pdf");
 //     c2->Print( CFdir + "QA/norm.root");

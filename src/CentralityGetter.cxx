@@ -9,6 +9,7 @@
 #include "TMath.h"
 #include "TGraphErrors.h"
 
+#include "TLegend.h"
 
 
 using std::vector;
@@ -197,7 +198,7 @@ Float_t CentralityGetter::GetCentrality (Double_t det1, Double_t det2)
 void CentralityGetter::GetGlauberB ()
 {
     
-    TCanvas *c1 = new TCanvas("c1", "canvas", 1500, 900);
+    TCanvas *c1 = new TCanvas("c1", "canvas", 1200, 900);
 
     
     GlauberParGetter *gg = new GlauberParGetter;
@@ -216,15 +217,21 @@ void CentralityGetter::GetGlauberB ()
     std::vector <Float_t> GlaubSigmaB_B;
     std::vector <Float_t> GlaubSigmaB;
     std::vector <Float_t> GlaubB;
-    c1->Divide(2,2);
+//     c1->Divide(2,2);
     
     
     TH1F *hTotal = new TH1F ("hTotal", "hTotal", 200, 0, 20);
     
     
     
-    c1->cd(1);
+//     c1->cd(1);
     gPad->SetLogy();
+    
+    Int_t colors [20] = { kRed+0, kBlue+0, kMagenta+0, kGreen+0, kYellow+0,  
+                          kRed+1, kBlue+1, kMagenta+1, kGreen+1, kYellow+1,
+                          kRed+2, kBlue+2, kMagenta+2, kGreen+2, kYellow+2,
+                          kRed+3, kBlue+3, kMagenta+3, kGreen+3, kYellow+3
+    };
     for (Int_t i=0; i<NSlices; i++)
     {
         
@@ -234,19 +241,21 @@ void CentralityGetter::GetGlauberB ()
         
         TH1F *h1 = new TH1F ("h1", "", 200, 0, 20);
         h1->SetName(Form("hB_%f_%f", MultMin, MultMax));
-        h1->SetLineColor(i+1);
+        h1->SetLineColor(colors[i]);
+        
+        std::cout << "MultMin = " << MultMin << "  MultMax = " << MultMax << std::endl;
         
         fSlice->GetXi(i);
         gg->GetBHisto(MultMin, MultMax, h1, 1e5);
         
-        h1->GetYaxis()->SetRangeUser(1, 500);
+        h1->GetYaxis()->SetRangeUser(1, 50000);
 
         if (i==0)  h1->Draw();
         else       h1->Draw("same");
         
         h1->Fit("gaus", "Q");
         TF1 *fFit = h1->GetFunction("gaus");
-        fFit->SetLineColor(i+1);
+        fFit->SetLineColor(colors[i]);
         Float_t meanB = fFit->GetParameter(1); 
         Float_t sigmaB = fFit->GetParameter(2);        
         
@@ -262,60 +271,73 @@ void CentralityGetter::GetGlauberB ()
     }
     hTotal->Draw("same");
     
-    c1->cd(3);
-    
-    gPad->SetLogy();
-    std::vector <Float_t> TempVecB, TempdB;
-    for (UInt_t j=0; j<NSlices; j++){
+//     c1->cd(3);
+    if (false)
+    {
+        gPad->SetLogy();
+        std::vector <Float_t> TempVecB, TempdB;
+        for (UInt_t j=0; j<NSlices; j++){
+            
+            float temp_dB = fSlice->GetdB().at(j);
+            float temp_B = fSlice->GetMeanB().at(j);
+            float temp_sB = fSlice->GetSigmaB().at(j);
+            float temp_dsB = fSlice->GetdSigmaB().at(j);
+            
+            TempVecB.push_back(temp_sB/temp_B);
+            
+            float ddd = TMath::Sqrt ( (temp_dsB/temp_B)*(temp_dsB/temp_B) + (temp_dsB/temp_B/temp_B*temp_dB)*(temp_dsB/temp_B/temp_B*temp_dB) );
+            
+    //         cout << "d_sigma = " << (temp_dsB/temp_B) << endl;
+    //         cout << "d_b = " << (temp_dsB/temp_B/temp_B*temp_dB) << endl;
+            
+            TempdB.push_back( ddd );
+        }
+
+        TGraphErrors *grSigmaB = new TGraphErrors (NSlices, &(centrality[0]), &(TempVecB[0]), 0, &(TempdB[0]));
+        grSigmaB->SetMarkerStyle(23);    
+        grSigmaB->GetXaxis()->SetTitle( "Centrality" );
+        grSigmaB->GetYaxis()->SetTitle( "sigma_{B}/<B>" );    
+        grSigmaB->GetYaxis()->SetRangeUser(0.01, 0.5);
         
-        float temp_dB = fSlice->GetdB().at(j);
-        float temp_B = fSlice->GetMeanB().at(j);
-        float temp_sB = fSlice->GetSigmaB().at(j);
-        float temp_dsB = fSlice->GetdSigmaB().at(j);
-        
-        TempVecB.push_back(temp_sB/temp_B);
-        
-        float ddd = TMath::Sqrt ( (temp_dsB/temp_B)*(temp_dsB/temp_B) + (temp_dsB/temp_B/temp_B*temp_dB)*(temp_dsB/temp_B/temp_B*temp_dB) );
-        
-//         cout << "d_sigma = " << (temp_dsB/temp_B) << endl;
-//         cout << "d_b = " << (temp_dsB/temp_B/temp_B*temp_dB) << endl;
-        
-        TempdB.push_back( ddd );
+        grSigmaB->Draw("APL");
+
+        TGraphErrors *grSigmaB1 = new TGraphErrors (NSlices, &(centrality[0]), &(GlaubSigmaB_B[0]), 0, 0);
+        grSigmaB1->SetMarkerStyle(22);    
+        grSigmaB1->SetMarkerColor(kRed);    
+        grSigmaB1->SetLineColor(kRed);    
+
+        grSigmaB1->Draw("PLsame");
     }
 
-    TGraphErrors *grSigmaB = new TGraphErrors (NSlices, &(centrality[0]), &(TempVecB[0]), 0, &(TempdB[0]));
-    grSigmaB->SetMarkerStyle(23);    
-    grSigmaB->GetXaxis()->SetTitle( "Centrality" );
-    grSigmaB->GetYaxis()->SetTitle( "sigma_{B}/<B>" );    
-    grSigmaB->GetYaxis()->SetRangeUser(0.01, 0.5);
-      
-    grSigmaB->Draw("APL");
-
-    TGraphErrors *grSigmaB1 = new TGraphErrors (NSlices, &(centrality[0]), &(GlaubSigmaB_B[0]), 0, 0);
-    grSigmaB1->SetMarkerStyle(22);    
-    grSigmaB1->SetMarkerColor(kRed);    
-    grSigmaB1->SetLineColor(kRed);    
-
-    grSigmaB1->Draw("PLsame");
-
-
-    c1->cd(4);
+//     c1->cd(4);
     
-    TGraphErrors *grB = new TGraphErrors (NSlices, &(centrality[0]), &(fSlice->GetMeanB()[0]), 0, &(fSlice->GetSigmaB()[0]));
-    grB->SetMarkerStyle(23);    
-    grB->GetXaxis()->SetTitle( "Centrality" );
-    grB->GetYaxis()->SetTitle( "<B>" );    
-    grB->GetYaxis()->SetRangeUser(0.0, 16.0);
-      
-    grB->Draw("APL");
-
+    TCanvas *c2 = new TCanvas("c2", "c2", 1200, 900);
+    
+    
+//     if (true)
+//     {    
+        TGraphErrors *grB = new TGraphErrors (NSlices, &(centrality[0]), &(fSlice->GetMeanB()[0]), 0, &(fSlice->GetSigmaB()[0]));
+        grB->SetMarkerStyle(23);    
+        grB->GetXaxis()->SetTitle( "Centrality" );
+        grB->GetYaxis()->SetTitle( "b, fm" );    
+        grB->GetYaxis()->SetRangeUser(0.0, 20.0);
+        
+        grB->Draw("APL");
+//     }
     TGraphErrors *grB1 = new TGraphErrors (NSlices, &(centrality[0]), &(GlaubB[0]), 0, &(GlaubSigmaB[0]));
     grB1->SetMarkerStyle(22);    
     grB1->SetMarkerColor(kRed);    
     grB1->SetLineColor(kRed);    
-
-    grB1->Draw("PLsame");
+    grB1->GetXaxis()->SetTitle( "Centrality" );
+    grB1->GetYaxis()->SetTitle( "b, fm" );    
+    grB1->Draw("LPsame");
     
+    TLegend* leg1 = new TLegend(0.7, 0.75, 0.85, 0.89);    
+    leg1->AddEntry(grB, "DCM-QGSM", "p"); 
+    leg1->AddEntry(grB1, "MC-Glauber", "p");
+    leg1->Draw("same");     
+
+    gPad->Update();
 
 
     
