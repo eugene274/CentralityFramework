@@ -13,9 +13,9 @@ ClassImp(GlauberFitter)
 
 // -----   Default constructor   -------------------------------------------
 GlauberFitter::GlauberFitter() 
-  : TNamed()
+  : TNamed(),
+  fMode("Default")
 {
-
 }
 
 void GlauberFitter::TestFunc(Int_t nf, Float_t f0, Float_t f1, Int_t nsigma, Int_t nEvents)
@@ -115,10 +115,11 @@ void GlauberFitter::SetGlauberFitHisto (Float_t f, Float_t mu, Float_t k, Int_t 
     for (Int_t i=0; i<n; i++)
     {
         fSimTree->GetEntry(i);
-        Na = f*fNpart + (1-f)*fNcoll;
-//         Na = TMath::Power(fNpart, f);    //TODO Try later
-//         Na = TMath::Power(fNcoll, f);    //TODO Try later
-        
+        if       (fMode == "Default")    Na = f*fNpart + (1-f)*fNcoll;
+        else if  (fMode == "Npart")      Na = TMath::Power(fNpart, f); 
+        else if  (fMode == "Ncoll")      Na = TMath::Power(fNcoll, f);
+        else if  (fMode == "PSD")        Na = f - fNpart;
+                
         Float_t nHits = 0;
         for (Int_t j=0; j<Na; j++){
             nHits += (int)hNBD->GetRandom();
@@ -330,84 +331,3 @@ Double_t GlauberFitter::NBD(Double_t n, Double_t mu, Double_t k) const
 
     return F;
 }
-
-/*
-void GlauberFitter::MinuitFitFCN (Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag)
-{
-  // FCN for minuit.
-
-    Double_t ff = par[0];
-    Double_t mu    = par[1];
-    Double_t k     = par[2];
-  
-    GlauberFitter * obj = (GlauberFitter *) gMinuit->GetObjectFit();
-    
-    obj->SetGlauberFitHisto (ff, mu, k);
-    Double_t chi2 = obj->GetChi2 ();
-
-    f = chi2;
-    
-    Printf("Minuit step: chi2=%f, f=%f,  mu=%f, k=%f\n", f, ff, mu, k);
-}*/
-
-/*
-void GlauberFitter::MinuitFit(Double_t f, Double_t mu, Double_t k)
-{
-    
-    SetSimHistos();
-    
-    Float_t mu_min = 0.05;
-    Float_t mu_max = 0.5;
-    Float_t mu_step = 0.001;
-    
-    Float_t f_min = 0.0;
-    Float_t f_max = 1.0;
-    Float_t f_step = 0.01;
-    
-    Float_t k_min = 0.1;
-    Float_t k_max = 5.0;
-    Float_t k_step = 0.1;
-
-  
-    Double_t arglist[10];
-    Int_t ierflg = 0;
-    arglist[0] = 1;
-    
-//     if(gMinuit) delete gMinuit;
-    TMinuit * gMinuit = new TMinuit(3);  //initialize TMinuit with a maximum of 3 params
-    gMinuit->mncler();
-    gMinuit->SetFCN(GlauberFitter::MinuitFitFCN);
-    gMinuit->SetObjectFit(this); 
-    
-    gMinuit->mnexcm("SET ERR", arglist ,1, ierflg);
-
-    gMinuit->mnparm(0,"f",   f,   f_step,   f_min,   f_max, ierflg);
-    gMinuit->mnparm(1,"mu", mu,  mu_step,  mu_min,  mu_max, ierflg);
-    gMinuit->mnparm(2,"k",   k,   k_step,   k_min,   k_max, ierflg);
-    
-    arglist[0] = 1000; // max calls
-    arglist[1] = 0.1;  // tolerance    
-    gMinuit->mnexcm("MIGrad",arglist, 2, ierflg);
-    
-    // ______________________ Get chi2 and Fit Status __________
-    Double_t amin,edm,errdef;
-    Int_t    nvpar, nparx, icstat;
-    
-    gMinuit->mnstat(amin,edm,errdef,nvpar,nparx,icstat);
-    Double_t chi2min = amin;
-    std::cout << "Fit status " << icstat << std::endl;
-
-    Double_t f_fit, mu_fit, k_fit;
-    Double_t alpha_mine, mu_mine, k_mine;
-    gMinuit->GetParameter(0, f_fit , alpha_mine );
-    gMinuit->GetParameter(1, mu_fit    , mu_mine    );
-    gMinuit->GetParameter(2, k_fit     , k_mine     );
-
-    // print some infos
-    std::cout << "chi2 min is " << chi2min << ", " << f_fit << ", "<< mu_fit<< ", "  << k_fit << std::endl;    
-
-
-    SetGlauberFitHisto ( f_fit, mu_fit, k_fit);
-    DrawHistos ();          
-              
-}*/

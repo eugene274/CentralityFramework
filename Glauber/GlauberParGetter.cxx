@@ -64,7 +64,6 @@ void GlauberParGetter::GetBHisto (Float_t MultMin,  Float_t MultMax, TH1F *hB, I
 
 // f = 0.75    mu = 0.404777    k = 66.8897
 
-
     Float_t Na;    
     SetNBDhist(fMu, fK);
   

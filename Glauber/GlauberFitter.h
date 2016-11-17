@@ -27,8 +27,6 @@ class GlauberFitter : public TNamed
         void FindMuGoldenSection (Float_t *mu, Float_t *chi2, Float_t mu_min, Float_t mu_max, Float_t f, Float_t k, Int_t nEvents = 10000, Int_t nIter = 5);
         
         Double_t GetChi2 (void);
-//         static void MinuitFitFCN (Int_t &npar, Double_t *gin, Double_t &f, Double_t *par, Int_t iflag);
-//         void MinuitFit(Double_t f, Double_t mu, Double_t k);
         
         Double_t NBD(Double_t n, Double_t mu, Double_t k) const;
         void SetNBDhist(Double_t mu, Double_t k);
@@ -50,6 +48,8 @@ class GlauberFitter : public TNamed
         TH1F *GetDataHisto ()       { return hData;  }
         TH1F *GetNBDHisto ()        { return hNBD;   }
         
+        void SetMode (TString mode) { fMode = mode; }
+        
     private:
 
 	/**   Data members  **/
@@ -64,6 +64,8 @@ class GlauberFitter : public TNamed
         Int_t fFitMultMin;
         Int_t fNormMultMin;
 
+        TString fMode;
+        
         TString fOutDirName;
         ClassDef(GlauberFitter, 2);
 

@@ -2,7 +2,7 @@
 
 void RunGlauberFitter (Int_t nf = 2, Float_t f0 = 0.7, Float_t f1 = 0.8, Int_t nsigma = 3, Float_t StepSigma = 0.15, Int_t nEvents = 10000, Int_t MultMin = 50)
 {
-    TString CentralityFrameworkDir = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/";
+    TString CentralityFrameworkDir = "/lustre/nyx/cbm/users/klochkov/git/CentralityFramework/";
 //     gStyle->SetOptStat(0000);    
     gSystem->Load( CentralityFrameworkDir + "build/libCentrality");    
     
@@ -15,12 +15,15 @@ void RunGlauberFitter (Int_t nf = 2, Float_t f0 = 0.7, Float_t f1 = 0.8, Int_t n
     
 //     TString DataFileName = CentralityFrameworkDir + "containers/ana_dima_merged.root";
     TString DataFileName = "/lustre/nyx/cbm/users/klochkov/soft/PidFramework/input/DCM_1M.root";
+//     TString DataFileName = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/root_files/na61_cont/na61_container_merged.root";
+    
     
     TFile *DataFile = new TFile ( DataFileName, "read" );    
     CentralityEventContainer *container = new CentralityEventContainer;
     TTree *ContTree = (TTree*)DataFile->Get("cbm_data");
+//     TTree *ContTree = (TTree*)DataFile->Get("na61_data");
     ContTree->SetBranchAddress("CentralityEventContainer", &container);
-    ContTree->Draw("CentralityEventContainer.GetDetectorWeight(3) >> h1(450, 0, 450)");
+    ContTree->Draw("CentralityEventContainer.GetDetectorWeight(3) >> h1(450, 0,450)", "", "");
     TH1F *hData1 = (TH1F*)gPad->GetPrimitive("h1");
     
     GlauberFitter *test = new GlauberFitter;
@@ -32,7 +35,6 @@ void RunGlauberFitter (Int_t nf = 2, Float_t f0 = 0.7, Float_t f1 = 0.8, Int_t n
     
     TString OutDir = "MinMult_";
     OutDir += MultMin;
-//     OutDir = "test";
     
     test->SetFitMultMin (MultMin);
     test->SetNormMultMin (MultMin);
@@ -41,23 +43,25 @@ void RunGlauberFitter (Int_t nf = 2, Float_t f0 = 0.7, Float_t f1 = 0.8, Int_t n
     test->SetSimHistos ("/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/Glauber/examples/glau_pbpb_ntuple_signn_31.0_7.6AGeV_CM_30AGeV_LC.root", nEvents);
     test->SetInputHisto (hData1);
        
-//     f = 0.783333    mu = 0.669471    k = 11.6558
-// f = 0.775    mu = 0.669559    k = 3.81179
+//     test->FitGlauber(nf, f0, f1, nsigma, StepSigma, nEvents);
+//     test->DrawHistos(true, true, false, false);
 
-/*    test->SetGlauberFitHisto (0.75, 0.404777, 66.8897, 500000, true);
+
+
+
+
+
+    test->SetGlauberFitHisto (1,0.879211, 145, 500000, true);
     TH1F *h1 = test->GetGlauberFitHisto ();
+    h1->SetLineColor(kRed);
+    
+    std::cout << "Integral = "  << h1->Integral(0,450) << std::endl;
+    
     h1->Draw();
     hData1->Draw("same");
     
     TLegend* legData = new TLegend(0.6,0.75,0.75,0.83);
     legData->AddEntry(h1 ,"Fit", "l");    
-    legData->AddEntry(hData1 ,"M_{TPC}", "l");    
-    legData->Draw("same");  */         
-
-// f = 0.75    mu = 0.404777    k = 66.8897    Chi2Min = 4.00233
-// f = 0.783333    mu = 0.692843    k = 11.6558    Chi2Min = 12.7801    
-    
-    
-    test->FitGlauber(nf, f0, f1, nsigma, StepSigma, nEvents);
-    test->DrawHistos(true, true, false, false);
+    legData->AddEntry(hData1 ,"M_{track}", "l");    
+    legData->Draw("same");               
 }

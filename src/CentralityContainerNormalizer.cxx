@@ -80,7 +80,7 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
     if (!fIsSimData)
         fInTree = (TTree*) fInFile->Get("na61_data");    //TODO set Tree name as parameter
     else
-        fInTree = (TTree*) fInFile->Get("cbm_data");    //TODO set Tree name as parameter
+        fInTree = (TTree*) fInFile->Get("container");    //TODO set Tree name as parameter
     fContainer = new CentralityEventContainer;
     fInTree->SetBranchAddress("CentralityEventContainer", &fContainer);   
     TRandom* random = new TRandom;
@@ -126,9 +126,9 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
         if (RunId != fContainer->GetRunId()/* || i == nTotalEvents-1 */)
         {
             IterRunId++;
-            std::cout << "NormFactor for run # " << RunId <<  ", det1 = " << NormFactor1;
-            if (Det2Id != -1)  std::cout << " , det2 = " << NormFactor2;
-            std::cout << std::endl;
+//             std::cout << "NormFactor for run # " << RunId <<  ", det1 = " << NormFactor1;
+//             if (Det2Id != -1)  std::cout << " , det2 = " << NormFactor2;
+//             std::cout << std::endl;
             NormFactor1 = fIsSimData ? 1.0 :  fDet1NormVec.at(IterRunId);
             if (Det2Id != -1)  NormFactor2 = fIsSimData ? 1.0 : fDet2NormVec.at(IterRunId);
             RunId = fContainer->GetRunId();
@@ -310,7 +310,7 @@ void CentralityContainerNormalizer::GetNormalization (Int_t Det1Id, Int_t Det2Id
     for (Int_t i=n1/2; i<n1; i++)
     {
 //         std::cout << "h1 = " << h1->GetBinContent(i+1) << std::endl; 
-        if (h1->GetBinContent(i+1) < 2)
+        if (h1->GetBinContent(i+1) < 1)
         {
             det1max *= i/float(n1);
             break;
