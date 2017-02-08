@@ -106,8 +106,8 @@ void CentralityContainerNormalizer::LoadInputData (Int_t Det1Id, Int_t Det2Id)
 
     std::cout << "Normalizing and applying run-by-run corrections..." << std::endl;
     
-    TH1F *h1NotCorr = new TH1F ("h1NotCorr", "h1NotCorr", 300, 0, 300);
-    TH1F *h1Corr    = new TH1F ("h1Corr", "h1Corr", 300, 0, 300);
+    TH1F *h1NotCorr = new TH1F ("h1NotCorr", "h1NotCorr", 500, 0, 500);
+    TH1F *h1Corr    = new TH1F ("h1Corr", "h1Corr", 500, 0, 500);
 
     fNormTree = new TTree ("NormTree", "Norm Tree");
     fNormTree->SetDirectory(0);     

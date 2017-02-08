@@ -12,6 +12,7 @@ using std::flush;
 TreeInterface::TreeInterface() 
   : TNamed(),
     fEvent (new DataTreeEvent),
+    fInFileName(""),
     fPsdGeomConfig ("CBM_44"),
     nEntries (0)
 {
@@ -20,10 +21,14 @@ TreeInterface::TreeInterface()
 void TreeInterface::WriteCentralityContainer ()
 {
     
-    TFile *fInFile = new TFile (fInFileName);
-    TTree *fInTree = (TTree*) fInFile->Get("fDataTree"); 
+    
+    if (fInFileName != "")
+    {
+        fInFile = new TFile (fInFileName);
+        fInTree = (TTree*) fInFile->Get("fDataTree"); 
+    }
+    
     fInTree->SetBranchAddress("DTEvent", &fEvent);
-
     fContainer = new CentralityEventContainer;
     
     CentralityDetectorEvent psd; 

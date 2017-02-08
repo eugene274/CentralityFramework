@@ -9,7 +9,7 @@
 #include "TTree.h"
 #include "TString.h"
 
-
+#include "TChain.h"
 
 #include "DataTreeEvent.h"
 #include "CentralityEventContainer.h"
@@ -26,6 +26,9 @@ class TreeInterface : public TNamed
     void SetOutFileName (TString OutFileName) {fOutFileName = OutFileName;}
     void SetInFileName  (TString InFileName)  {fInFileName = InFileName;}
     void SetNEntries (int n) { nEntries = n; }
+
+    void SetInTChain  (TChain* chain)  { fInTree = (TTree*)chain; }
+
 private:
     Float_t Beam_Eta;
     TString fOutFileName;
@@ -33,6 +36,9 @@ private:
     
 /**   Data members  **/
     DataTreeEvent *fEvent;
+    
+    TFile *fInFile ;
+    TTree *fInTree ;    
     
     TTree *fOutTree;
     TFile *fOutFile;

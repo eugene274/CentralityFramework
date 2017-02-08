@@ -1,8 +1,8 @@
 
-int CentralityContainerQA (TString DataFileName)
+int CentralityContainerQA (TString DataFileName = "../containers/cbm_urqmd_merged.root")
 {
-    TString CentralityFrameworkDir = "/lustre/nyx/cbm/users/klochkov/soft/CentralityFramework/";
-    gStyle->SetOptStat(0000);    
+    TString CentralityFrameworkDir = "/lustre/nyx/cbm/users/klochkov/git/CentralityFramework/";
+//     gStyle->SetOptStat(0000);    
     gSystem->Load( CentralityFrameworkDir + "build/libCentrality");    
         
     TFile *DataFile = new TFile ( DataFileName, "read" );    
